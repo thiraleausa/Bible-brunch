@@ -294,6 +294,18 @@ input[type=password]{width:100%;border:2.5px solid var(--ink);background:var(--p
 .wbbtns .fbtns button{min-width:36px;height:36px;border:2.5px solid var(--ink);border-radius:10px;background:var(--paper);font-weight:900;padding:0 8px}
 .wbbtns .fbtns button:disabled{opacity:.3}
 .seclist{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-weight:700}
+.fbbox{flex-direction:row;align-items:flex-start;gap:12px;background:var(--aqua);text-align:left}
+button.fbbox{align-items:center}
+.fbbox .grow{flex:1;min-width:0}
+.fbicon{flex:none;width:44px;height:44px;border-radius:12px;border:2.5px solid var(--ink);background:var(--paper);display:grid;place-items:center}
+.fbicon svg{width:24px;height:24px}
+.fbselect{width:100%;border:2.5px solid var(--ink);border-radius:14px;padding:10px 12px;font-weight:700;background:var(--paper)}
+.fbchips{display:flex;flex-wrap:wrap;gap:8px}
+.fbchip input{position:absolute;opacity:0;width:1px;height:1px}
+.fbchip span{display:inline-block;border:2.5px solid var(--ink);border-radius:999px;padding:6px 12px;font-weight:800;font-size:14px;background:var(--paper);cursor:pointer}
+.fbchip input:checked+span{background:var(--yellow)}
+.fbchip input:focus-visible+span{outline:3px solid var(--purple);outline-offset:2px}
+.fbtags{display:flex;flex-wrap:wrap;gap:6px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 body{margin:0}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
@@ -470,7 +482,7 @@ purgeSamples();
 const CFG=window.BB_CONFIG||{};
 const sb=(window.supabase&&CFG.url&&CFG.key&&!/PASTE/.test(CFG.url+CFG.key))?window.supabase.createClient(CFG.url,CFG.key):null;
 const ME={id:null,name:"",admin:false,anon:true};
-const G={rsvps:{},ready:false,members:[]};           // everyone's RSVPs by month: [{name,status,mine}]
+const G={rsvps:{},ready:false,members:[],feedback:[],feedbackReady:true};           // everyone's RSVPs by month: [{name,status,mine}]
 const PLAN_KEYS=["plan","details","every"];
 const MINE_KEYS=["seed","prep","wb","commits","secretDone","invite"];
 let SYNC="idle",planTimer=null,mineTimer=null,lastPlan="",lastMine="";
@@ -498,12 +510,13 @@ async function loadPlan(){if(!sb)return;const {data}=await sb.from("shared_state
   if(data&&data.data){lastPlan=JSON.stringify(data.data);Object.assign(S,data.data)}}
 async function loadAll(){if(!sb||!ME.id)return;
   const q=t=>sb.from(t).select("*");
-  const [mine,rs,cl,pr,hits,jn,nt,ph,int,_plan,mem]=await Promise.all([
+  const [mine,rs,cl,pr,hits,jn,nt,ph,int,_plan,mem,fb]=await Promise.all([
     sb.from("user_state").select("data").eq("user_id",ME.id).maybeSingle(),q("rsvps"),q("claims"),
     sb.from("prayers").select("*").order("created_at",{ascending:false}),q("prayer_hits"),
     sb.from("journal").select("*").order("created_at",{ascending:true}),sb.from("notes").select("*").order("created_at",{ascending:true}),
-    q("photos"),ME.admin?sb.from("interested").select("*").order("created_at",{ascending:false}):Promise.resolve({data:[]}),loadPlan(),sb.from("members").select("id,name,created_at").order("created_at",{ascending:true})]);
+    q("photos"),ME.admin?sb.from("interested").select("*").order("created_at",{ascending:false}):Promise.resolve({data:[]}),loadPlan(),sb.from("members").select("id,name,created_at").order("created_at",{ascending:true}),sb.from("feedback").select("*").order("created_at",{ascending:false})]);
   G.members=(mem&&mem.data)||[];
+  G.feedback=(fb&&fb.data)||[];G.feedbackReady=!(fb&&fb.error);
   if(mine.data&&mine.data.data){lastMine=JSON.stringify(mine.data.data);Object.assign(S,mine.data.data)}
   S.rsvp={};G.rsvps={};(rs.data||[]).forEach(r=>{const m=r.user_id===ME.id;if(m)S.rsvp[r.month]=r.status;(G.rsvps[r.month]=G.rsvps[r.month]||[]).push({name:r.name,status:r.status,mine:m})});
   S.claims={};(cl.data||[]).forEach(c=>{(S.claims[c.month]=S.claims[c.month]||{})[c.item]=c.user_id===ME.id?"You":c.name});
@@ -614,6 +627,35 @@ function secretPicker(uid){const k=secKey;const m=G.members.find(x=>x.id===uid);
    <div class="opts">${L.map((x,i)=>`<button class="opt" style="grid-template-columns:1fr" data-secset="${uid}" data-i="${i}" aria-pressed="${x===cur}"><span><b style="font-weight:700">${esc(x)}</b></span></button>`).join("")}</div>
    <form data-seccustom="${uid}" class="row"><input type="text" id="sec-custom" placeholder="Or write one just for them" aria-label="Custom assignment"><button class="btn y" type="submit">Use</button></form>
    ${isOv?`<button class="btn w block" data-secauto="${uid}">Go back to automatic</button>`:""}`)}
+const FB_REASONS=["Works for me","Too early","Too late","Wrong day of the week","Conflicts with something","Too long","Would prefer an evening","Would prefer a weekend morning"];
+function fbLabel(k){if(!k)return "Dates and times in general";const t=byId[S.plan[k]];return t?`${t.name} · ${fmtMon(eventDate(k,t))} ${eventDate(k,t).getDate()}`:"A past gathering"}
+function feedbackBox(){
+  if(ME.admin){const open=G.feedback.filter(f=>!f.resolved);
+    return `<button class="box fbbox" data-ctab-go="Feedback"><span class="fbicon">${I.cal}</span><span class="grow"><b class="h2" style="font-size:20px">Date & time feedback</b><br><span style="font-weight:800;font-size:14px">${G.feedbackReady?(open.length?`${open.length} new · tap to read`:"Nothing new yet"):"Not set up yet: run the feedback SQL in Supabase"}</span></span><span style="font-weight:900;font-size:22px">›</span></button>`}
+  const mine=G.feedback.length;
+  return `<div class="box fbbox"><span class="fbicon">${I.cal}</span><div class="grow"><b class="h2" style="font-size:20px">Do these dates and times work for you?</b>
+    <p style="font-weight:700;font-size:14px;margin:2px 0 10px">Tell ${esc(hostName())} what works and what doesn't.${mine?` You've sent ${mine===1?"one note":mine+" notes"}. Thank you!`:""}</p>
+    <button class="btn block" data-feedback="">Give feedback</button></div></div>`}
+function hostName(){return "the host"}
+function feedbackSheet(k){const ks=months().filter(x=>S.plan[x]&&eventDate(x,byId[S.plan[x]])>=today());
+  sheet(`<div class="h2">Feedback on dates & times</div><form data-fbform style="display:flex;flex-direction:column;gap:12px;overflow-y:auto;padding:2px">
+   <label class="field"><span class="label">Which gathering?</span><select id="fb-k" class="fbselect"><option value="">All of them / in general</option>${ks.map(x=>`<option value="${x}" ${x===k?"selected":""}>${esc(fbLabel(x))}</option>`).join("")}</select></label>
+   <div class="field"><span class="label">Tap any that fit</span><div class="fbchips">${FB_REASONS.map((r,i)=>`<label class="fbchip"><input type="checkbox" id="fb-r-${i}" value="${esc(r)}"><span>${esc(r)}</span></label>`).join("")}</div></div>
+   <label class="field"><span class="label">Anything else? (optional)</span><textarea id="fb-text" maxlength="1000" placeholder="e.g. Saturdays at 10 are hard with nap time. 4 PM would be easier."></textarea></label>
+   <button class="btn block" type="submit">Send feedback</button></form>`)}
+function feedbackLog(){if(!G.feedbackReady)return `<div class="box"><p>Feedback isn't set up yet. Run the feedback SQL in Supabase, then reload.</p></div>`;
+  const L=G.feedback;const open=L.filter(f=>!f.resolved),done=L.filter(f=>f.resolved);
+  const card=f=>`<div class="entry"><div class="by"><span><b style="color:var(--ink)">${esc(f.name)}</b> · ${ago(f.created_at)}</span>${f.resolved?`<span class="kind" style="background:var(--green)">Handled</span>`:""}</div>
+    <p class="who" style="margin:0">${esc(fbLabel(f.month))}</p>
+    ${f.topic?`<div class="fbtags">${f.topic.split(" · ").map(x=>`<span class="kind">${esc(x)}</span>`).join("")}</div>`:""}
+    ${f.text?`<p>${esc(f.text)}</p>`:""}
+    <div class="by">${f.resolved?"<span></span>":`<button class="pray" data-fbdone="${f.id}">Mark handled</button>`}<button class="x" data-fbdel="${f.id}">Remove</button></div></div>`;
+  const tally={};open.forEach(f=>(f.topic||"").split(" · ").filter(Boolean).forEach(x=>tally[x]=(tally[x]||0)+1));
+  const top=Object.entries(tally).sort((a,b)=>b[1]-a[1]);
+  return `<div class="box tint" style="flex-direction:row;align-items:center;gap:16px"><span class="big">${open.length}</span><p><b>new notes about dates & times</b><br><span class="who">${done.length} handled</span></p></div>
+   ${top.length?`<div class="box"><div class="label">What people are saying most</div><div class="fbtags">${top.map(([x,n])=>`<span class="kind">${esc(x)} · ${n}</span>`).join("")}</div></div>`:""}
+   <div class="box">${open.length?open.map(card).join(""):`<p class="who">No new feedback. When someone sends some, it shows up here.</p>`}</div>
+   ${done.length?`<div class="box"><div class="label">Handled</div>${done.map(card).join("")}</div>`:""}`}
 function setOverride(uid,val){O2(S,"details");const d=S.details[secKey]=det(secKey);const o={...(d.secretOverrides||{})};if(val)o[uid]=val;else delete o[uid];d.secretOverrides=o;save()}
 const DEFAULT_TITLES=["Icebreaker","Read it together","Talk about it","Journal","Group photo","Your secret assignment","Take-home challenges","Close in prayer"];
 const D=(k,f,def)=>{const o=k?det(k):{};return o[f]!=null&&o[f]!==""?o[f]:def};
@@ -662,6 +704,7 @@ function home(){
    </div>
   <div class="pad">
    ${ks.length?`<div class="cards">${ks.map((k,i)=>{const t=byId[S.plan[k]];return tile(t,{key:k,badge:k.slice(0,7)===c?"This month":"",tag:"button",attrs:`data-open="${k}" aria-label="${esc(t.name)}, ${monName(k)}"`})}).join("")}</div>
+   ${feedbackBox()}
    ${homeStrip(curGathering())}
    <button class="btn block" data-openinvite style="font-size:17px;padding:14px">Invite a friend to Bible Brunch</button>
    <p class="hint">Tap this month's card for prep, sign-ups, the day-of workbook, and challenges. The next three show the plan.</p>`
@@ -679,7 +722,7 @@ function itinerary(t,k){
      <dt>When</dt><dd>${d?`${fmtLong(d)}<br>${clock(startMin(k,t))} to ${clock(m)}`:"Not on the calendar yet"}</dd>
      ${k?`<dt>Where</dt><dd>${det(k).place?`${esc(det(k).place)}<br><a class="maplink" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(det(k).place)}" target="_blank" rel="noopener">Open in Maps</a>`:"Location to be announced"}</dd>
      <dt>Host</dt><dd>${det(k).host?esc(det(k).host):"To be announced"}</dd>`:""}
-     <dt>Read</dt><dd>${esc(readOf(k,t))}</dd><dt>Setup</dt><dd style="white-space:pre-line">${esc(setupOf(k,t))}</dd></dl>${k?`<button class="btn w" data-edit="${k}">Edit details &amp; setup</button>`:""}${k&&ME.admin&&S.plan[k]===t.id?`<button class="btn y" data-wbedit="${k}">Edit the day-of workbook</button>`:""}</div>
+     <dt>Read</dt><dd>${esc(readOf(k,t))}</dd><dt>Setup</dt><dd style="white-space:pre-line">${esc(setupOf(k,t))}</dd></dl>${k?`<button class="btn w" data-edit="${k}">Edit details &amp; setup</button>`:""}${k&&ME.admin&&S.plan[k]===t.id?`<button class="btn y" data-wbedit="${k}">Edit the day-of workbook</button>`:""}${k?`<button class="btn" data-feedback="${k}">Does this date or time work for you?</button>`:""}</div>
    <div class="box"><div class="h2">The itinerary</div>
     <ol class="timeline">${steps.length?"":`<li><span class="what" style="grid-column:1/-1">No steps yet.</span></li>`}${steps.map((s,i)=>`<li style="--c:${colors[i%colors.length]}"><span class="clock">${clock(s.at)}</span><span class="pin"></span><span class="what">${esc(s.label)}${s.always?`<span class="always">Every month</span>`:""}<small>${s.min} min</small></span></li>`).join("")}</ol>
    ${k?`<button class="btn w" data-editflow="${k}">Edit itinerary</button>`:""}</div>
@@ -891,6 +934,8 @@ function collective(){
        ${ns.map(n=>`<div class="entry"><div class="by"><span>On: ${esc(n.q)}</span><span class="row"><span class="kind note">Group note</span>${n.sample?`<span class="sample">Sample</span>`:""}</span></div><p>${esc(n.text)}</p></div>`).join("")}</div>`}).join("");
   } else if(ctab==="Challenges"){
     body=challenges(curGathering());
+  } else if(ctab==="Feedback"){
+    body=feedbackLog();
   } else if(ctab==="Interested"){
     body=interestedLog();
   } else {
@@ -900,7 +945,7 @@ function collective(){
       <button class="pray" data-pray="${p.id}" aria-pressed="${p.me}">${p.me?"Praying":"I'll pray"} · ${p.n}</button></div></div>`).join("")}</div>`;
   }
   return `<div class="top"><div><div class="brand">The Collective<span class="dot">.</span></div><div class="sub">Everything we've gathered, all in one place.</div></div></div>
-   <div class="pad"><div class="chips">${["Photos","Journal","Challenges","Prayer"].concat(ME.admin?["Interested"]:[]).map(x=>`<button class="chip" data-ctab="${x}" aria-pressed="${ctab===x}">${x}</button>`).join("")}</div>${body}</div>`;
+   <div class="pad"><div class="chips">${["Photos","Journal","Challenges","Prayer"].concat(ME.admin?["Feedback","Interested"]:[]).map(x=>`<button class="chip" data-ctab="${x}" aria-pressed="${ctab===x}">${x}</button>`).join("")}</div>${body}</div>`;
 }
 
 /* ---------- plan + themes ---------- */
@@ -1168,6 +1213,10 @@ document.addEventListener("click",e=>{
   else if(ds.starter){const ta=document.getElementById("inv-note");ta.value=NOTE_STARTERS[ds.starter];ta.focus();inv().note=ta.value;save();refreshInvite()}
   else if(ds.copy){if(ds.copy==="msg")copyText(inviteMsg(),"copybox");else if(ds.copy==="link")copyText(inviteLink(),"copybox");else copyText(document.getElementById("replybox").value,"replybox")}
   else if(ds.saveimg!==undefined){saveCardImage()}
+  else if(ds.feedback!==undefined){if(!ME.id){toast("Join the group first");return}feedbackSheet(ds.feedback||"")}
+  else if(ds.ctabGo){tab="collective";ctab=ds.ctabGo;detailId=null;page=null;render();document.getElementById("main").scrollTop=0}
+  else if(ds.fbdone){const f=G.feedback.find(x=>x.id===ds.fbdone);f.resolved=true;render();dbTry(sb.from("feedback").update({resolved:true}).eq("id",f.id)).catch(()=>refresh())}
+  else if(ds.fbdel){if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to remove";return}dbTry(sb.from("feedback").delete().eq("id",ds.fbdel)).then(()=>{G.feedback=G.feedback.filter(x=>x.id!==ds.fbdel);render();toast("Removed")}).catch(()=>{})}
   else if(ds.secopen){if(!ME.admin)return;secKey=ds.secopen;secFrom=null;page="secrets";render();document.getElementById("dscroll").scrollTop=0}
   else if(ds.seclist){edit("step",ds.seclist,5)}
   else if(ds.secpick){secretPicker(ds.secpick)}
@@ -1265,6 +1314,11 @@ document.addEventListener("submit",e=>{e.preventDefault();const f=e.target,ds=f.
   else if(ds.iadd!==undefined){const n=document.getElementById("ia-name").value.trim(),ph=document.getElementById("ia-phone").value.trim();if(!n){toast("Add a name first");return}
     if(ph.replace(/\D/g,"").length<7){toast("Add a phone number");return}
     dbTry(sb.from("interested").insert({name:n.slice(0,80),phone:ph.slice(0,30),invited_by:document.getElementById("ia-by").value.trim().slice(0,60)})).then(()=>{toast("Added");refresh()}).catch(()=>{})}
+  else if(ds.fbform!==undefined){const k=document.getElementById("fb-k").value;const topics=[...f.querySelectorAll(".fbchip input:checked")].map(x=>x.value);const text=document.getElementById("fb-text").value.trim().slice(0,1000);
+    if(!topics.length&&!text){toast("Tap an option or write a note");return}const btn=f.querySelector("button[type=submit]");btn.disabled=true;btn.textContent="Sending…";
+    sb.from("feedback").insert({user_id:ME.id,name:ME.name,month:k||null,topic:topics.join(" · ").slice(0,300),text}).then(({error})=>{
+      if(error){console.error(error);btn.disabled=false;btn.textContent="Send feedback";toast(G.feedbackReady?"Couldn't send. Check your connection.":"Feedback isn't set up yet. Tell the host.");return}
+      closeSheet();toast("Thanks! Your feedback was sent.");refresh()})}
   else if(ds.seccustom){const v=document.getElementById("sec-custom").value.trim().slice(0,200);if(!v){toast("Write an assignment first");return}setOverride(ds.seccustom,v);closeSheet();render();toast("Assignment changed")}
   else if(ds.customstep){const L=stepsOf(wbKey).map(x=>({...x}));const st=L.find(x=>x.id===ds.customstep);if(!st)return;
     st.title=document.getElementById("cs-title").value.trim().slice(0,80);st.text=document.getElementById("cs-text").value.trim();
