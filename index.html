@@ -293,6 +293,7 @@ input[type=password]{width:100%;border:2.5px solid var(--ink);background:var(--p
 .wbbtns .fbtns{display:flex;gap:6px}
 .wbbtns .fbtns button{min-width:36px;height:36px;border:2.5px solid var(--ink);border-radius:10px;background:var(--paper);font-weight:900;padding:0 8px}
 .wbbtns .fbtns button:disabled{opacity:.3}
+.seclist{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-weight:700}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 body{margin:0}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
@@ -335,7 +336,12 @@ const T = [
  {id:"sunrise",name:"Sunrise Scripture",cat:"Quiet",h:12,time:"7:00 AM",tag:"Meet at dawn. His mercies are new every morning.",ref:"Lamentations 3:22–23",text:"It is of the LORD's mercies that we are not consumed, because his compassions fail not. They are new every morning: great is thy faithfulness.",read:"Lamentations 3:19–26",setting:"Outdoor sunrise reading, then coffee and pastries.",prep:"Bring a camp chair and a warm layer.",qs:["What do you need fresh mercy for today?","What does God's faithfulness look like in your mornings?","How could you build a morning rhythm with God?"],bring:["Camp chairs","Thermoses of coffee","Pastries","Blankets"]},
  {id:"presence",name:"Prayer & Presence",cat:"Quiet",h:225,tag:"Less talking about prayer. More praying.",ref:"Exodus 33:14",text:"My presence shall go with thee, and I will give thee rest.",read:"Philippians 4:4–7",setting:"Guided prayer stations around the room.",prep:"Bring one request you've been carrying alone.",qs:["Where do you most need God's presence right now?","What does peace that passes understanding feel like for you?","What helps you notice God during the day?"],bring:["Candles","Prayer cards","Soft music","Light snacks"]},
  {id:"saturday",name:"Saturday with the Savior",cat:"Quiet",h:85,tag:"Come away and rest a while.",ref:"Mark 6:31",text:"Come ye yourselves apart into a desert place, and rest a while.",read:"Mark 6:30–44 · Matthew 11:28–30",setting:"A slow morning: a walk, a picnic, a devotional.",prep:"Plan to stay the whole morning. Leave the to-do list at home.",qs:["What makes rest hard for you?","Where did Jesus take his disciples to rest, and what happened next?","What is one burden you can lay down this week?"],bring:["Picnic blankets","Sandwiches","Fruit","Water"]},
- {id:"service",name:"Service + Scripture",cat:"Serve",h:150,tag:"Plan how to serve, then go do it together.",ref:"Matthew 25:40",text:"Inasmuch as ye have done it unto one of the least of these my brethren, ye have done it unto me.",read:"Matthew 25:31–46 · Galatians 5:13",setting:"Two-phase format across two gatherings.",prep:"Phase 1: bring ideas and needs you've noticed near you.",phases:[["Phase 1","Brainstorm how to serve others. List needs, pick a project, and assign roles."],["Phase 2","Volunteer together, then close with a short devotional. Examples: assemble care kits, help at a food pantry, or a community cleanup."]],qs:["Who are “the least of these” in our own community?","What need have you noticed that no one is meeting?","How did serving change how you read Matthew 25?"],bring:["Care-kit supplies","Gloves & trash bags","Snacks","Sign-up sheet"]},
+ {id:"service",name:"Service + Scripture: Part 1",cat:"Serve",h:150,tag:"Part 1 of 2: plan how we'll serve together.",ref:"Matthew 25:40",text:"Inasmuch as ye have done it unto one of the least of these my brethren, ye have done it unto me.",read:"Matthew 25:31–46",setting:"Brunch, Matthew 25, and a planning session. We leave with one service project and a plan for Part 2.",prep:"Come with ideas: needs you've noticed nearby, groups that could use help, or a project you'd love to do together.",
+  flow:[[15,"Welcome & icebreaker"],[10,"Read Matthew 25:31–46 together"],[25,"Brainstorm needs around us"],[15,"Vote on one project for Part 2"],[15,"Make the plan: where, when, supplies, and roles"],[5,"Group photo",1],[10,"Secret assignments & take-home challenges",1],[5,"Close in prayer"]],
+  qs:["Who are “the least of these” in our own community?","What need have you noticed that no one is meeting?","What could our group realistically do together in Part 2?"],bring:["Brunch dish","Notebook or sticky notes","Ideas for local needs","Coffee"]},
+ {id:"service2",name:"Service + Scripture: Part 2",cat:"Serve",h:150,tag:"Part 2 of 2: we go do the project we planned.",ref:"Galatians 5:13",text:"For, brethren, ye have been called unto liberty; only use not liberty for an occasion to the flesh, but by love serve one another.",read:"Galatians 5:13–14 · Matthew 25:34–40",setting:"On location for the service project we picked in Part 1, then a short devotional together.",prep:"Wear clothes you can work in, and bring the supplies you signed up for in Part 1.",
+  flow:[[10,"Meet up & get your job"],[90,"Serve together"],[15,"Clean up"],[20,"Short devotional: Galatians 5:13–14"],[5,"Group photo",1],[10,"Secret assignments & take-home challenges",1],[10,"Pray for the people we served"]],
+  qs:["Where did you see Jesus today?","What surprised you about serving together?","How could we keep serving between gatherings?"],bring:["Project supplies","Work gloves","Water bottles","Snacks for the team","Trash bags"]},
 ];
 
 /* ---------- card looks, icebreakers, take-home challenges ---------- */
@@ -367,6 +373,7 @@ const X = {
  sunrise:{bg:"#FFD0A8",st:["sun","mug","leaf","sparkle","heart"],ice:"Early bird or night owl?",ch:["Read Lamentations 3:22–23 every morning.","Watch one more sunrise this month with God."]},
  presence:{bg:"#B5F2FF",st:["candle","heart","sparkle","leaf","moon"],ice:"Where is your favorite place to pray?",ch:["Set three phone reminders a day to stop and pray.","Pray for the person on your left by name all month."]},
  saturday:{bg:"#CFF7A1",st:["sun","leaf","juice","heart","sparkle"],ice:"What does your perfect Saturday look like?",ch:["Take one screen-free half day.","Lay one burden down in prayer every Saturday."]},
+ service2:{bg:"#FFC2A8",st:["box","sun","heart","leaf","sparkle"],ice:"What's one way someone served you this year?",ch:[]},
  service:{bg:"#FFAD8A",st:["box","heart","leaf","sparkle","box"],ice:"Who served you in a way you never forgot?",ch:["Show up for the service project we planned together.","Do one anonymous act of service each week."]},
 };
 T.forEach(t=>Object.assign(t,X[t.id]));
@@ -463,7 +470,7 @@ purgeSamples();
 const CFG=window.BB_CONFIG||{};
 const sb=(window.supabase&&CFG.url&&CFG.key&&!/PASTE/.test(CFG.url+CFG.key))?window.supabase.createClient(CFG.url,CFG.key):null;
 const ME={id:null,name:"",admin:false,anon:true};
-const G={rsvps:{},ready:false};           // everyone's RSVPs by month: [{name,status,mine}]
+const G={rsvps:{},ready:false,members:[]};           // everyone's RSVPs by month: [{name,status,mine}]
 const PLAN_KEYS=["plan","details","every"];
 const MINE_KEYS=["seed","prep","wb","commits","secretDone","invite"];
 let SYNC="idle",planTimer=null,mineTimer=null,lastPlan="",lastMine="";
@@ -491,11 +498,12 @@ async function loadPlan(){if(!sb)return;const {data}=await sb.from("shared_state
   if(data&&data.data){lastPlan=JSON.stringify(data.data);Object.assign(S,data.data)}}
 async function loadAll(){if(!sb||!ME.id)return;
   const q=t=>sb.from(t).select("*");
-  const [mine,rs,cl,pr,hits,jn,nt,ph,int]=await Promise.all([
+  const [mine,rs,cl,pr,hits,jn,nt,ph,int,_plan,mem]=await Promise.all([
     sb.from("user_state").select("data").eq("user_id",ME.id).maybeSingle(),q("rsvps"),q("claims"),
     sb.from("prayers").select("*").order("created_at",{ascending:false}),q("prayer_hits"),
     sb.from("journal").select("*").order("created_at",{ascending:true}),sb.from("notes").select("*").order("created_at",{ascending:true}),
-    q("photos"),ME.admin?sb.from("interested").select("*").order("created_at",{ascending:false}):Promise.resolve({data:[]}),loadPlan()]);
+    q("photos"),ME.admin?sb.from("interested").select("*").order("created_at",{ascending:false}):Promise.resolve({data:[]}),loadPlan(),sb.from("members").select("id,name,created_at").order("created_at",{ascending:true})]);
+  G.members=(mem&&mem.data)||[];
   if(mine.data&&mine.data.data){lastMine=JSON.stringify(mine.data.data);Object.assign(S,mine.data.data)}
   S.rsvp={};G.rsvps={};(rs.data||[]).forEach(r=>{const m=r.user_id===ME.id;if(m)S.rsvp[r.month]=r.status;(G.rsvps[r.month]=G.rsvps[r.month]||[]).push({name:r.name,status:r.status,mine:m})});
   S.claims={};(cl.data||[]).forEach(c=>{(S.claims[c.month]=S.claims[c.month]||{})[c.item]=c.user_id===ME.id?"You":c.name});
@@ -508,9 +516,15 @@ async function loadAll(){if(!sb||!ME.id)return;
   ["prep","wb","commits","secretDone","claims","rsvp","details"].forEach(f=>S[f]=S[f]||{});if(!S.invite)S.invite={name:ME.name,note:"",phone:"",overview:""};
   if(!S.invite.name)S.invite.name=ME.name;
   G.ready=true;
+  if(ME.admin&&splitService())save();
   if(ME.admin&&!lastPlan)pushPlan();
   try{const c={...S};delete c.photos;localStorage.setItem(KEY,JSON.stringify(c))}catch(e){}}
 
+function splitService(){const ks=Object.keys(S.plan||{});if(ks.some(k=>S.plan[k]==="service2"))return false;
+  const k=ks.find(x=>x.startsWith("2026-12")&&S.plan[x]==="service");if(!k)return false;
+  S.details=S.details||{};const d=S.details[k]=S.details[k]||{};d.date="2026-12-05";if(!d.time)d.time="10:00";
+  if(d.setting==="Two-phase format across two gatherings.")delete d.setting;
+  let nk=k+"~2",n=3;while(S.plan[nk])nk=`${k}~${n++}`;S.plan[nk]="service2";S.details[nk]={date:"2026-12-19",time:d.time,place:d.place||"",host:d.host||""};return true}
 async function afterSignIn(){const {data:{user}}=await sb.auth.getUser();if(!user)return false;
   ME.id=user.id;ME.anon=!!user.is_anonymous;
   const [adm,mem]=await Promise.all([sb.rpc("is_admin"),sb.from("members").select("name").eq("id",user.id).maybeSingle()]);
@@ -562,16 +576,45 @@ let tab="home",ctab="Photos",cat="All",q="",detailKey=null,detailId=null,dtab="i
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const months=()=>Object.keys(S.plan).sort();
 const det=k=>(S.details=S.details||{})[k]||{};
-function eventDate(key,t){const o=S.details&&S.details[key];if(o&&o.date){const [yy,mm,dd]=o.date.split("-").map(Number);return new Date(yy,mm-1,dd)}const [y,m]=key.split("-").map(Number);const d=new Date(y,m-1,1);const target=t&&t.day==="Wednesday"?3:6;const off=(target-d.getDay()+7)%7;return new Date(y,m-1,1+off+14)}
+function eventDate(key,t){const o=S.details&&S.details[key];if(o&&o.date){const [yy,mm,dd]=o.date.split("-").map(Number);return new Date(yy,mm-1,dd)}const [y,m]=key.slice(0,7).split("-").map(Number);const d=new Date(y,m-1,1);const target=t&&t.day==="Wednesday"?3:6;const off=(target-d.getDay()+7)%7;return new Date(y,m-1,1+off+14)}
 const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
 const fmtLong=d=>d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
 const fmtMon=d=>d.toLocaleDateString("en-US",{month:"short"});
-const monName=k=>{const [y,m]=k.split("-").map(Number);return new Date(y,m-1,1).toLocaleDateString("en-US",{month:"long",year:"numeric"})};
-const monShort=k=>{const [y,m]=k.split("-").map(Number);return new Date(y,m-1,1).toLocaleDateString("en-US",{month:"long"})};
+const monName=k=>{const [y,m]=k.slice(0,7).split("-").map(Number);return new Date(y,m-1,1).toLocaleDateString("en-US",{month:"long",year:"numeric"})};
+const monShort=k=>{const [y,m]=k.slice(0,7).split("-").map(Number);return new Date(y,m-1,1).toLocaleDateString("en-US",{month:"long"})};
 function curKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`}
-function homeKeys(){const c=curKey();const ks=months().filter(k=>k>=c&&S.plan[k]);return ks.slice(0,4)}
+function homeKeys(){const c=curKey();const ks=months().filter(k=>k.slice(0,7)>=c&&S.plan[k]);return ks.slice(0,4)}
 function nextAfter(k){return months().find(x=>x>k&&S.plan[x])}
-function secretFor(k){const L=secretsOf(k);if(!L.length)return "No secret assignments set for this month.";let h=S.seed;for(const ch of k)h=(h*31+ch.charCodeAt(0))>>>0;return L[h%L.length]}
+function curGathering(){const c=curKey();const ks=months().filter(k=>k.slice(0,7)===c&&S.plan[k]);if(!ks.length)return c;const t0=today();let pick=ks[0];ks.forEach(k=>{if(eventDate(k,byId[S.plan[k]])<=t0)pick=k});return pick}
+function monthOffset(k){let h=7;for(const ch of k)h=(h*31+ch.charCodeAt(0))>>>0;return h}
+function secretOf(k,uid){const L=secretsOf(k);const ov=(det(k).secretOverrides||{})[uid];if(ov)return ov;if(!L.length)return "";
+  const i=G.members.findIndex(m=>m.id===uid);if(i<0){let h=S.seed||1;for(const ch of k)h=(h*31+ch.charCodeAt(0))>>>0;return L[h%L.length]}
+  return L[(i+monthOffset(k))%L.length]}
+function secretFor(k){return secretOf(k,ME.id)||"No secret assignments set for this month."}
+let secKey=null,secFrom=null;
+function secretsView(){const k=secKey,t=byId[S.plan[k]];const L=secretsOf(k);const ov=det(k).secretOverrides||{};
+  const rs=G.rsvps[k]||[];const status=uid=>{const m=G.members.find(x=>x.id===uid);const r=rs.find(x=>x.name===(m&&m.name));return r?r.status:""};
+  const people=G.members.slice();const counts={};people.forEach(m=>{const a=secretOf(k,m.id);counts[a]=(counts[a]||0)+1});
+  const dupes=Object.values(counts).some(n=>n>1);
+  return `<div class="scroll" id="dscroll"><div class="top"><button class="iconbtn" data-closepage aria-label="Back">${I.back}</button><div style="flex:1;min-width:0"><div class="brand" style="font-size:26px">Secret assignments<span class="dot">.</span></div><div class="sub">${esc(t.name)} · ${fmtLong(eventDate(k,t))}</div></div></div>
+   <div class="pad">
+    <div class="note">Only hosts see this page. Each person sees just their own assignment on gathering day. Assignments are handed out in order from your list, so nobody doubles up unless there are more people than assignments, and they rotate every month.</div>
+    <div class="box"><div class="bhead"><div class="h2">The list</div><button class="editpill" data-seclist="${k}">Edit</button></div>
+     <p class="who" style="margin-top:-6px">${L.length} assignment${L.length===1?"":"s"} for ${monShort(k)}</p>
+     <ol class="seclist">${L.map(x=>`<li>${esc(x)}</li>`).join("")}</ol></div>
+    <div class="box"><div class="h2">Who gets what</div>
+     <p class="who" style="margin-top:-6px">${people.length} ${people.length===1?"person has":"people have"} joined.${dupes?` Some people share an assignment because there are more people than assignments. Add more to the list to fix that.`:""}</p>
+     ${people.length?`<ul class="list">${people.map(m=>{const a=secretOf(k,m.id);const st=status(m.id);return `<li style="align-items:flex-start"><div class="grow"><b>${esc(m.name)}${m.id===ME.id?" (you)":""}</b>${st?` <span class="kindtag" style="color:var(--soft)">· ${st==="going"?"Going":st==="maybe"?"Maybe":"Can't come"}</span>`:""}
+        <div class="who" style="color:var(--ink);font-weight:700">${esc(a||"Nothing yet")}</div>${ov[m.id]?`<div class="who">Picked by you</div>`:""}</div>
+        <button class="pill" data-secpick="${m.id}">Change</button></li>`}).join("")}</ul>`:`<p class="who">Nobody has joined yet. Share your link and people will show up here.</p>`}
+    </div>
+   </div></div>`}
+function secretPicker(uid){const k=secKey;const m=G.members.find(x=>x.id===uid);const L=secretsOf(k);const cur=secretOf(k,uid);const isOv=!!(det(k).secretOverrides||{})[uid];
+  sheet(`<div class="h2">${esc(m?m.name:"")}'s assignment</div>
+   <div class="opts">${L.map((x,i)=>`<button class="opt" style="grid-template-columns:1fr" data-secset="${uid}" data-i="${i}" aria-pressed="${x===cur}"><span><b style="font-weight:700">${esc(x)}</b></span></button>`).join("")}</div>
+   <form data-seccustom="${uid}" class="row"><input type="text" id="sec-custom" placeholder="Or write one just for them" aria-label="Custom assignment"><button class="btn y" type="submit">Use</button></form>
+   ${isOv?`<button class="btn w block" data-secauto="${uid}">Go back to automatic</button>`:""}`)}
+function setOverride(uid,val){O2(S,"details");const d=S.details[secKey]=det(secKey);const o={...(d.secretOverrides||{})};if(val)o[uid]=val;else delete o[uid];d.secretOverrides=o;save()}
 const DEFAULT_TITLES=["Icebreaker","Read it together","Talk about it","Journal","Group photo","Your secret assignment","Take-home challenges","Close in prayer"];
 const D=(k,f,def)=>{const o=k?det(k):{};return o[f]!=null&&o[f]!==""?o[f]:def};
 const readOf=(k,t)=>D(k,"read",t.read);
@@ -584,7 +627,7 @@ const TXT={ice:t=>t.ice,verseText:t=>t.text,verseRef:t=>t.ref,jp:(t,k)=>`Take fi
   photoNote:()=>"Everyone in. Every month.",chIntro:()=>"Before you leave, everyone picks challenges worth 10 points to work on until the next gathering. Challenges have their own tab, so you can log your days all month.",
   prayer:()=>"Share a request, then pray for the person on your right."};
 const txt=(k,t,f)=>D(k,f,TXT[f](t,k));
-function flowOf(k,t){const o=k?det(k):{};return o.flow||FLOW[t.cat]}
+function flowOf(k,t){const o=k?det(k):{};return o.flow||t.flow||FLOW[t.cat]}
 function setupOf(k,t){const o=k?det(k):{};return o.setting!=null&&o.setting!==""?o.setting:t.setting}
 function timeOf(k,t){const o=k?det(k):{};if(o.time){const [h,m]=o.time.split(":").map(Number);return clock(h*60+m)}return t.time||"10:00 AM"}
 function to24(s){const [hm,ap]=s.split(" ");let [h,m]=hm.split(":").map(Number);if(ap==="PM"&&h!==12)h+=12;if(ap==="AM"&&h===12)h=0;return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`}
@@ -618,8 +661,8 @@ function home(){
   return `<div class="top"><div><div class="brand">Bible Brunch<span class="dot">.</span></div><div class="sub">One table. One theme. Every month.</div><div class="sync" id="sync"></div></div>
    </div>
   <div class="pad">
-   ${ks.length?`<div class="cards">${ks.map((k,i)=>{const t=byId[S.plan[k]];return tile(t,{key:k,badge:k===c?"This month":"",tag:"button",attrs:`data-open="${k}" aria-label="${esc(t.name)}, ${monName(k)}"`})}).join("")}</div>
-   ${homeStrip(c)}
+   ${ks.length?`<div class="cards">${ks.map((k,i)=>{const t=byId[S.plan[k]];return tile(t,{key:k,badge:k.slice(0,7)===c?"This month":"",tag:"button",attrs:`data-open="${k}" aria-label="${esc(t.name)}, ${monName(k)}"`})}).join("")}</div>
+   ${homeStrip(curGathering())}
    <button class="btn block" data-openinvite style="font-size:17px;padding:14px">Invite a friend to Bible Brunch</button>
    <p class="hint">Tap this month's card for prep, sign-ups, the day-of workbook, and challenges. The next three show the plan.</p>`
    :`<div class="empty">Nothing planned yet. Open Plan to pick themes.</div>`}
@@ -684,7 +727,7 @@ function stepBody(t,k,st){const w=O2(S.wb,k);const notes=S.gnotes.filter(n=>n.ke
    case "photo":return photo?`<img class="photo" src="${photo}" alt="Group photo for ${esc(t.name)}"><label class="btn w block">Retake photo<input type="file" accept="image/*" data-photo="${k}" hidden></label>`
       :`<label class="drop">${I.cam}<span>Add this month's group photo</span><span class="sub">${esc(txt(k,t,"photoNote"))}</span><input type="file" accept="image/*" data-photo="${k}"></label>`;
    case "secret":return `<button class="secret ${w.secret?"open":""}" data-flip="secret">${w.secret?`Only you can see this<big>${esc(secretFor(k))}</big>`:`Tap to reveal<br><span class="sub" style="color:#fff">Don't share it with anyone</span>`}</button>
-      ${w.secret?`<p class="sub">Everyone gets a different one. Check it off on the Challenges tab when you've done it.</p>`:""}`;
+      ${w.secret?`<p class="sub">Everyone gets a different one. Check it off on the Challenges tab when you've done it.</p>`:""}${ME.admin?`<button class="btn w" data-secopen="${k}">Host: see who got what</button>`:""}`;
    case "chal":return `<p style="white-space:pre-line">${esc(txt(k,t,"chIntro"))}</p>${next?`<p class="sub">Next gathering: ${fmtLong(eventDate(next,byId[S.plan[next]]))}</p>`:""}
       <button class="btn y" data-dtab="chal">Choose my challenges</button>`;
    case "prayer":return `<p style="white-space:pre-line">${esc(txt(k,t,"prayer"))}</p><textarea id="ptext-${k}" placeholder="What can the group pray for?"></textarea><button class="btn" data-pray-add="${k}">Post to the prayer wall</button>`;
@@ -711,7 +754,7 @@ function stepPreview(t,k,st){const cut=x=>{x=String(x||"");return x.length>110?x
   switch(st.id){case "ice":return cut(txt(k,t,"ice"));case "read":return `${txt(k,t,"verseRef")} · Read aloud: ${readOf(k,t)}`;
    case "talk":{const q=qsOf(k,t);return `${q.length} question${q.length===1?"":"s"}: ${cut(q[0])}`}
    case "journal":return cut(txt(k,t,"jp"));case "photo":return cut(txt(k,t,"photoNote"));
-   case "secret":{const L=secretsOf(k);return `${L.length} assignments in the draw, one per person`}
+   case "secret":{const L=secretsOf(k);return `${L.length} assignments · ${G.members.length} people joined. Tap Edit to see who gets what.`}
    case "chal":return cut(txt(k,t,"chIntro"));case "prayer":return cut(txt(k,t,"prayer"))}
   return st.kind==="ask"?`${(st.prompts||[]).length} question${(st.prompts||[]).length===1?"":"s"} to answer${st.text?" · "+cut(st.text):""}`:cut(st.text)||"No text yet"}
 function wbEditView(){const k=wbKey,t=byId[S.plan[k]];const steps=stepsOf(k);const d=eventDate(k,t);
@@ -767,7 +810,8 @@ const CH={
  sunrise:[["Wake 15 minutes early to meet with God",3,7,1],["Read Lamentations 3:22–23 every morning",5,14,0],["Meet God before sunrise every day until the next gathering",10,30,0]],
  presence:[["Stop and pray at three set times each day",3,7,1],["Pray for the person on your left by name every day",5,14,0],["Keep three daily prayer times until the next gathering",10,30,0]],
  saturday:[["Lay one burden down in prayer every night",3,7,1],["Take a screen-free hour every day",5,14,0],["Keep a daily screen-free hour and a weekly Sabbath",10,28,0]],
- service:[["Do one anonymous act of service every day",3,7,1],["Pray daily for the people our project will serve",5,14,0],["Serve somewhere every week and pray for it daily",10,28,0]],
+ service:[["Pray daily for the people our project will serve",3,7,1],["Gather supplies for Part 2 and invite a friend to join",5,14,0],["Do one anonymous act of service every day until Part 2",10,14,0]],
+ service2:[["Pray daily for the people we served",3,7,1],["Do one act of service at home every day",5,14,0],["Plan a service project with your family or friends",10,21,0]],
 };
 const EVERY=[["Complete your secret assignment",2,1,0,"secret"],["Encourage someone in the group every day",2,3,1],["Pray for every person in the group by name, one a day",3,7,0],["Memorize this month's key verse with daily practice",4,10,0],["No phone for the first hour of your day",5,7,1],["Journal one prayer a day",5,14,0]];
 const SIZES={2:[3,1,"3 days in a row"],3:[7,0,"7 days"],5:[14,0,"14 days"],10:[30,0,"30 days"]};
@@ -821,7 +865,7 @@ function challenges(k){
 }
 
 function detail(){
-  const t=byId[detailId];const k=detailKey;const live=k&&k===curKey();const isCur=live||(ME.admin&&k&&S.plan[k]===t.id);
+  const t=byId[detailId];const k=detailKey;const live=k&&k.slice(0,7)===curKey();const isCur=live||(ME.admin&&k&&S.plan[k]===t.id);
   let body;
   if(isCur){body=`<div class="seg" role="tablist">${[["itin","Plan"],["prep","Prep"],["day","Day of"],["chal","Challenges"]].map(([v,l])=>`<button data-dtab="${v}" aria-pressed="${dtab===v}">${l}</button>`).join("")}</div>`}
   const inner=!isCur?itinerary(t,k)+`<div class="note">${k?`Prep, food sign-ups, and the workbook open in ${monShort(k)}.`:"Add this theme to a month on the Plan tab to schedule it."}</div>`
@@ -833,12 +877,12 @@ function detail(){
 
 /* ---------- collective ---------- */
 function collective(){
-  const c=curKey();const past=months().filter(k=>k<=c&&S.plan[k]);
+  const c=curKey();const past=months().filter(k=>k.slice(0,7)<=c&&S.plan[k]);
   let body="";
   if(ctab==="Photos"){
     body=`<div class="pgrid">${past.slice().reverse().map(k=>{const t=byId[S.plan[k]];const p=S.photos[k];
-      return `<div class="pcell">${p?`<img src="${p}" alt="Group photo, ${monName(k)}">`:tile(t)}<span>${monName(k)} ${p?"":(k<c?"· no photo":"· photo pending")}</span></div>`}).join("")}</div>
-     <label class="btn y block">Add ${monShort(c)}'s group photo<input type="file" accept="image/*" data-photo="${c}" hidden></label>`;
+      return `<div class="pcell">${p?`<img src="${p}" alt="Group photo, ${monName(k)}">`:tile(t)}<span>${monName(k)} ${p?"":(k.slice(0,7)<c?"· no photo":"· photo pending")}</span></div>`}).join("")}</div>
+     <label class="btn y block">Add ${monShort(c)}'s group photo<input type="file" accept="image/*" data-photo="${curGathering()}" hidden></label>`;
   } else if(ctab==="Journal"){
     body=past.slice().reverse().map(k=>{const t=byId[S.plan[k]];const js=S.journal.filter(j=>j.key===k&&(j.shared||j.who==="You"));const ns=S.gnotes.filter(n=>n.key===k);
       if(!js.length&&!ns.length) return `<div class="box"><div class="h2">${esc(t.name)}</div><p class="sub">${monName(k)} · Nothing yet. Journal entries and discussion notes from the workbook land here.</p></div>`;
@@ -846,7 +890,7 @@ function collective(){
        ${js.map(j=>`<div class="entry"><div class="by"><span>${esc(j.who)}</span><span class="row"><span class="kind ${j.shared?"":"private"}">${j.shared?"Journal":"Only you"}</span>${j.sample?`<span class="sample">Sample</span>`:""}</span></div><p>${esc(j.text)}</p></div>`).join("")}
        ${ns.map(n=>`<div class="entry"><div class="by"><span>On: ${esc(n.q)}</span><span class="row"><span class="kind note">Group note</span>${n.sample?`<span class="sample">Sample</span>`:""}</span></div><p>${esc(n.text)}</p></div>`).join("")}</div>`}).join("");
   } else if(ctab==="Challenges"){
-    body=challenges(c);
+    body=challenges(curGathering());
   } else if(ctab==="Interested"){
     body=interestedLog();
   } else {
@@ -865,7 +909,7 @@ function plan(){
   return `<div class="top"><div><div class="brand">Year plan<span class="dot">.</span></div><div class="sub">Tap Edit to change a date, time, or location</div></div></div>
   <div class="pad"><div class="months">${months().map(k=>{const t=byId[S.plan[k]];const d=eventDate(k,t);
     return `<div class="mrow ${k===c?"now":""}">${t?tile(t,{tag:"button",attrs:`data-open="${k}" aria-label="Open ${esc(t.name)}"`}):`<div class="tile" style="--cbg:#F2F2F2"></div>`}
-     <button class="info" data-open="${k}"><b>${t?esc(t.name):"Open month"}</b><small>${d.toLocaleDateString("en-US",{weekday:"short"})}, ${fmtMon(d)} ${d.getDate()} · ${t?(timeOf(k,t)):""}${k===c?" · This month":k<c?" · Done":""}</small><small class="place">${det(k).place?esc(det(k).place):"Location to be announced"}</small></button>
+     <button class="info" data-open="${k}"><b>${t?esc(t.name):"Open month"}</b><small>${d.toLocaleDateString("en-US",{weekday:"short"})}, ${fmtMon(d)} ${d.getDate()} · ${t?(timeOf(k,t)):""}${k.slice(0,7)===c?" · This month":k.slice(0,7)<c?" · Done":""}</small><small class="place">${det(k).place?esc(det(k).place):"Location to be announced"}</small></button>
      <button class="pill" data-edit="${k}">Edit</button></div>`}).join("")}</div>
    <button class="btn y block" data-addmonth>Add another month</button></div>`;
 }
@@ -881,7 +925,7 @@ function themes(){
 function sheet(html){document.getElementById("overlay").innerHTML=`<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`}
 const closeSheet=()=>document.getElementById("overlay").innerHTML="";
 function editMonth(k){const t=byId[S.plan[k]];const o=det(k);const d=eventDate(k,t);
-  sheet(`<div class="h2">Edit ${monShort(k)}</div><form data-editform="${k}" style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding:2px">
+  sheet(`<div class="h2">Edit ${esc(t.name)}</div><form data-editform="${k}" style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding:2px">
    <button type="button" class="opt" data-pick="${k}">${tile(t)}<span><b>${esc(t.name)}</b><small>Tap to change the theme</small></span></button>
    <div class="two"><label class="field"><span class="label">Date</span><input type="date" id="ed-date" value="${iso(d)}" required></label>
    <label class="field"><span class="label">Start time</span><input type="time" id="ed-time" value="${to24(timeOf(k,t))}" required></label></div>
@@ -889,7 +933,8 @@ function editMonth(k){const t=byId[S.plan[k]];const o=det(k);const d=eventDate(k
    <label class="field"><span class="label">Host (optional)</span><input type="text" id="ed-host" value="${esc(o.host||"")}" placeholder="Who's hosting?"></label>
    <label class="field"><span class="label">Setup</span><textarea id="ed-setup" placeholder="Food, tables, supplies…">${esc(setupOf(k,t))}</textarea></label>
    <button class="btn block" type="submit">Save</button>
-   <button type="button" class="x" style="align-self:center" data-removemonth="${k}">Remove ${monShort(k)} from the plan</button>
+   <button type="button" class="btn w block" data-addsame="${k}">Add another gathering in ${monShort(k)}</button>
+   <button type="button" class="x" style="align-self:center" data-removemonth="${k}">Remove this gathering from the plan</button>
   </form>`)}
 let flowDraft=null,flowKey=null;
 function editFlow(k){const t=byId[S.plan[k]];flowKey=k;flowDraft=flowDraft&&flowKey===k?flowDraft:flowOf(k,t).map(r=>[...r]);drawFlow()}
@@ -913,7 +958,7 @@ const OVERVIEW="Bible Brunch is a monthly gathering where we share a meal, open 
 const NOTE_STARTERS=["A verse that stuck with me was ","Something someone said that I keep thinking about: ","This month's challenge has changed how I "];
 let landingEvent=null;let page=null, landingFrom=null, landingPreview=false, landingStep="intro", landingReply=null;
 function inv(){S.invite=S.invite||{name:"",note:"",phone:"",overview:OVERVIEW};return S.invite}
-function featured(){const c=curKey();const k=S.plan[c]&&eventDate(c,byId[S.plan[c]])>=today()?c:nextAfter(c)||c;return k}
+function featured(){const t0=today();const ms=months().filter(k=>S.plan[k]);return ms.find(k=>eventDate(k,byId[S.plan[k]])>=t0)||ms[ms.length-1]||curKey()}
 function inviteSlug(){const v=inv();const nm=(v.name||"").replace(/[^A-Za-z]/g,"").slice(0,20);const ph=(v.phone||"").replace(/\D/g,"").slice(-10);
   const k=featured();const t=byId[S.plan[k]];let ev="";if(t){const d=eventDate(k,t);ev=`-d${iso(d).replace(/-/g,"")}-t${to24(timeOf(k,t)).replace(":","")}-th_${t.id}`}
   return "i"+(nm?"-"+nm:"")+(ph.length>=10?"-"+ph:"")+ev}
@@ -1036,7 +1081,7 @@ const POP={pancakes:"🥞🍓🫐🧈🍯🍊",brunch:"🥐🍳🥓☕🍓🥞",
  bagels:"🥯☕🍅🥒🌞",biscuits:"🍞🍯🧈📖✨",bread:"🍞🥖🥐🌾🫓",honey:"🍯🐝🌻🫖🍋",soup:"🍲🥣🥖🥕🧅",supper:"🕯️🍇🍞🍽️✨",charcuterie:"🧀🍇🫒🥖🍓🥜",
  teatest:"🫖☕🍋🌸💬",cocoa:"☕🍫❄️⛄✨",teatruth:"🫖🍵🗝️✨🍪",commandments:"🍪📜💗✨🥛",psalms:"🎵🎶📖🕊️💛",stillness:"🕯️🍃🌙🕊️✨",
  worship:"🎵🎸🎶🙌✨",fellowship:"🥘☕🎲💛🍪",pajamas:"🌙⭐🍿🧸☁️",grace:"💗🌷☕✨🕊️",create:"🎨🖌️✂️🌸✨",sunrise:"🌅☀️☕🥐🐦",
- presence:"🕯️🙏🕊️✨🍃",saturday:"☀️🧺🌿🍉🦋",service:"📦🧤💗🥫🌻"};
+ presence:"🕯️🙏🕊️✨🍃",saturday:"☀️🧺🌿🍉🦋",service:"📦🧤💗🥫🌻",service2:"📦🧤💗🥫🌻"};
 const reduceMotion=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
 function pointOf(src){if(src&&src.clientX!=null&&(src.clientX||src.clientY))return [src.clientX,src.clientY];
   const el=src&&src.target?src.target:src;const r=el&&el.getBoundingClientRect?el.getBoundingClientRect():null;return r?[r.left+r.width/2,r.top+r.height/2]:[innerWidth/2,innerHeight/2]}
@@ -1100,7 +1145,7 @@ function render(){setTimeout(paintSync,0);
   document.getElementById("tabs").innerHTML=[["home","Home",I.home],["collective","Collective",I.coll],["plan","Plan",I.cal],["themes","Themes",I.themes]]
    .map(([k,l,ic])=>`<button data-tab="${k}" ${tab===k?'aria-current="page"':""}>${ic}${l}</button>`).join("");
   const dt=document.getElementById("detail");
-  if(page){const ds=document.getElementById("dscroll")?.scrollTop||0;dt.innerHTML=page==="invite"?inviteView():page==="wbedit"?wbEditView():page==="welcome"?welcomeView():page==="setup"?setupView():landingView();dt.hidden=false;document.getElementById("dscroll").scrollTop=ds;
+  if(page){const ds=document.getElementById("dscroll")?.scrollTop||0;dt.innerHTML=page==="invite"?inviteView():page==="wbedit"?wbEditView():page==="secrets"?secretsView():page==="welcome"?welcomeView():page==="setup"?setupView():landingView();dt.hidden=false;document.getElementById("dscroll").scrollTop=ds;
     document.getElementById("tabs").hidden=page==="welcome"||page==="setup"||(page==="landing"&&!landingPreview);
     if(page==="invite"&&navigator.share){const b=document.getElementById("sharenative");if(b)b.hidden=false}return}
   document.getElementById("tabs").hidden=false;
@@ -1115,16 +1160,21 @@ document.addEventListener("click",e=>{
   if(ds.open&&!S.plan[ds.open]&&!ME.admin)return;
   if(ds.tab){tab=ds.tab;detailId=null;render();document.getElementById("main").scrollTop=0}
   else if(ds.open){if(S.plan[ds.open])openDetail(ds.open,S.plan[ds.open],ds.goto);else pickTheme(ds.open)}
-  else if(ds.theme){const k=months().find(x=>S.plan[x]===ds.theme&&x>=curKey());openDetail(k||null,ds.theme)}
+  else if(ds.theme){const k=months().find(x=>S.plan[x]===ds.theme&&x.slice(0,7)>=curKey());openDetail(k||null,ds.theme)}
   else if(ds.close!==undefined){detailId=null;render()}
   else if(ds.openinvite!==undefined){page="invite";render();document.getElementById("dscroll").scrollTop=0}
-  else if(ds.closepage!==undefined){if(page==="landing"&&landingPreview){page="invite";landingPreview=false}else{const back=page==="wbedit"?wbKey:null;page=null;if(back&&detailId)openDetail(back,S.plan[back],"day");else render()}}
+  else if(ds.closepage!==undefined){if(page==="landing"&&landingPreview){page="invite";landingPreview=false}else{if(page==="secrets"&&secFrom==="wbedit"){page="wbedit";render();return}const back=page==="wbedit"?wbKey:page==="secrets"?secKey:null;page=null;if(back&&detailId)openDetail(back,S.plan[back],"day");else render()}}
   else if(ds.preview!==undefined){const v=inv();landingFrom={name:v.name,phone:(v.phone||"").replace(/\D/g,"").slice(-10)};landingPreview=true;landingStep="intro";page="landing";render();document.getElementById("dscroll").scrollTop=0}
   else if(ds.starter){const ta=document.getElementById("inv-note");ta.value=NOTE_STARTERS[ds.starter];ta.focus();inv().note=ta.value;save();refreshInvite()}
   else if(ds.copy){if(ds.copy==="msg")copyText(inviteMsg(),"copybox");else if(ds.copy==="link")copyText(inviteLink(),"copybox");else copyText(document.getElementById("replybox").value,"replybox")}
   else if(ds.saveimg!==undefined){saveCardImage()}
+  else if(ds.secopen){if(!ME.admin)return;secKey=ds.secopen;secFrom=null;page="secrets";render();document.getElementById("dscroll").scrollTop=0}
+  else if(ds.seclist){edit("step",ds.seclist,5)}
+  else if(ds.secpick){secretPicker(ds.secpick)}
+  else if(ds.secset){setOverride(ds.secset,secretsOf(secKey)[Number(ds.i)]);closeSheet();render();toast("Assignment changed")}
+  else if(ds.secauto){setOverride(ds.secauto,null);closeSheet();render();toast("Back to automatic")}
   else if(ds.wbedit){if(!ME.admin)return;wbKey=ds.wbedit;page="wbedit";render();document.getElementById("dscroll").scrollTop=0}
-  else if(ds.wbstep){const st=stepsOf(wbKey).find(x=>x.id===ds.wbstep);if(!st)return;if(isBuiltin(st))edit("step",wbKey,BUILTIN[st.id]);else editCustomStep(wbKey,st)}
+  else if(ds.wbstep){const st=stepsOf(wbKey).find(x=>x.id===ds.wbstep);if(!st)return;if(st.id==="secret"){secKey=wbKey;secFrom="wbedit";page="secrets";render();document.getElementById("dscroll").scrollTop=0;return}if(isBuiltin(st))edit("step",wbKey,BUILTIN[st.id]);else editCustomStep(wbKey,st)}
   else if(ds.wbmove){const L=stepsOf(wbKey).map(x=>({...x}));const i=Number(ds.wbmove),j=i+Number(ds.d);[L[i],L[j]]=[L[j],L[i]];setSteps(wbKey,L);render()}
   else if(ds.wbdel){const L=stepsOf(wbKey).map(x=>({...x}));const st=L[Number(ds.wbdel)];if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again";b.style.width="auto";return}
     L.splice(Number(ds.wbdel),1);setSteps(wbKey,L);render();toast(`Removed "${stepName(wbKey,st)}"`)}
@@ -1173,9 +1223,10 @@ document.addEventListener("click",e=>{
   else if(ds.fadd!==undefined){flowDraft.push([10,""]);drawFlow();setTimeout(()=>document.getElementById("fl-label-"+(flowDraft.length-1))?.focus(),0)}
   else if(ds.fdel){flowDraft.splice(Number(ds.fdel),1);drawFlow()}
   else if(ds.fmove){const i=Number(ds.fmove),j=i+Number(ds.d);[flowDraft[i],flowDraft[j]]=[flowDraft[j],flowDraft[i]];drawFlow()}
-  else if(ds.freset!==undefined){const t=byId[S.plan[flowKey]];flowDraft=FLOW[t.cat].map(r=>[...r]);drawFlow()}
+  else if(ds.freset!==undefined){const t=byId[S.plan[flowKey]];flowDraft=(t.flow||FLOW[t.cat]).map(r=>[...r]);drawFlow()}
   else if(ds.fsave!==undefined){const rows=flowDraft.filter(r=>String(r[1]).trim());(S.details=S.details||{})[flowKey]=Object.assign(det(flowKey),{flow:rows.map(r=>[Math.max(0,Number(r[0])||0),String(r[1]).trim(),r[2]])});save();flowDraft=null;closeSheet();render();toast("Itinerary saved")}
-  else if(ds.addmonth!==undefined){const ms=months();const last=ms[ms.length-1]||curKey();const [y,m]=last.split("-").map(Number);const nk=ms.length?`${m===12?y+1:y}-${String(m===12?1:m+1).padStart(2,"0")}`:curKey();pickTheme(nk)}
+  else if(ds.addsame){if(!ME.admin)return;const base=ds.addsame.slice(0,7);let n=2,nk=`${base}~2`;while(S.plan[nk])nk=`${base}~${++n}`;closeSheet();pickTheme(nk)}
+  else if(ds.addmonth!==undefined){const ms=months();const last=ms[ms.length-1]||curKey();const [y,m]=last.slice(0,7).split("-").map(Number);const nk=ms.length?`${m===12?y+1:y}-${String(m===12?1:m+1).padStart(2,"0")}`:curKey();pickTheme(nk)}
   else if(ds.removemonth){if(b.dataset.armed){delete S.plan[ds.removemonth];if(S.details)delete S.details[ds.removemonth];save();closeSheet();if(detailKey===ds.removemonth)detailId=null;render();toast("Removed from the plan")}else{b.dataset.armed="1";b.textContent="Tap again to remove it"}}
   else if(ds.setplan){const isNew=!S.plan[ds.setplan];S.plan[ds.setplan]=ds.id;save();closeSheet();render();if(isNew)editMonth(ds.setplan);toast(`${monShort(ds.setplan)} is set`)}
   else if(ds.pray){const p=S.prayers.find(x=>x.id==ds.pray);p.me=!p.me;p.n+=p.me?1:-1;render();dbTry(p.me?sb.from("prayer_hits").insert({prayer_id:p.id,user_id:ME.id}):sb.from("prayer_hits").delete().eq("prayer_id",p.id).eq("user_id",ME.id)).catch(()=>refresh())}
@@ -1214,6 +1265,7 @@ document.addEventListener("submit",e=>{e.preventDefault();const f=e.target,ds=f.
   else if(ds.iadd!==undefined){const n=document.getElementById("ia-name").value.trim(),ph=document.getElementById("ia-phone").value.trim();if(!n){toast("Add a name first");return}
     if(ph.replace(/\D/g,"").length<7){toast("Add a phone number");return}
     dbTry(sb.from("interested").insert({name:n.slice(0,80),phone:ph.slice(0,30),invited_by:document.getElementById("ia-by").value.trim().slice(0,60)})).then(()=>{toast("Added");refresh()}).catch(()=>{})}
+  else if(ds.seccustom){const v=document.getElementById("sec-custom").value.trim().slice(0,200);if(!v){toast("Write an assignment first");return}setOverride(ds.seccustom,v);closeSheet();render();toast("Assignment changed")}
   else if(ds.customstep){const L=stepsOf(wbKey).map(x=>({...x}));const st=L.find(x=>x.id===ds.customstep);if(!st)return;
     st.title=document.getElementById("cs-title").value.trim().slice(0,80);st.text=document.getElementById("cs-text").value.trim();
     const pe=document.getElementById("cs-prompts");if(pe)st.prompts=pe.value.split("\n").map(x=>x.trim()).filter(Boolean);
@@ -1222,8 +1274,8 @@ document.addEventListener("submit",e=>{e.preventDefault();const f=e.target,ds=f.
     L.fields.forEach((f,i)=>{const v=document.getElementById("ef-"+i).value.trim();if(f.f==="__title")setTitle(L.k,L.step,v);else if(v)d[f.f]=v;else delete d[f.f]});
     save();LD=null;closeSheet();render();toast("Saved")}
   else if(ds.editform){const k=ds.editform;const date=document.getElementById("ed-date").value,time=document.getElementById("ed-time").value;if(!date||!time){toast("Pick a date and time");return}
-    const o={date,time,place:document.getElementById("ed-place").value.trim(),host:document.getElementById("ed-host").value.trim(),setting:document.getElementById("ed-setup").value.trim(),flow:det(k).flow};if(!o.flow)delete o.flow;let nk=date.slice(0,7);
-    if(nk!==k){if(S.plan[nk]){toast(`${monShort(nk)} already has a gathering`);return}
+    const o={date,time,place:document.getElementById("ed-place").value.trim(),host:document.getElementById("ed-host").value.trim(),setting:document.getElementById("ed-setup").value.trim(),flow:det(k).flow};if(!o.flow)delete o.flow;let nk=date.slice(0,7);if(nk===k.slice(0,7))nk=k;else{let n=2,base=nk;while(S.plan[nk])nk=`${base}~${n++}`}
+    if(nk!==k){
       S.plan[nk]=S.plan[k];delete S.plan[k];["rsvp","claims","extra","prep","wb","photos","commits","secretDone"].forEach(f=>{if(S[f]&&S[f][k]!==undefined){S[f][nk]=S[f][k];delete S[f][k]}});G.rsvps[nk]=G.rsvps[k];delete G.rsvps[k];
       Promise.all(["rsvps","claims","journal","notes"].map(tb=>sb.from(tb).update({month:nk}).eq("month",k))).then(rs=>{if(rs.some(r=>r.error))toast("Some sign-ups didn't move. Check your connection.")});
       if(S.photos[nk])sb.from("photos").upsert({month:nk,data:S.photos[nk],user_id:ME.id}).then(()=>sb.from("photos").delete().eq("month",k));
