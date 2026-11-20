@@ -306,6 +306,11 @@ button.fbbox{align-items:center}
 .fbchip input:checked+span{background:var(--yellow)}
 .fbchip input:focus-visible+span{outline:3px solid var(--purple);outline-offset:2px}
 .fbtags{display:flex;flex-wrap:wrap;gap:6px}
+a.pill{color:var(--ink);text-decoration:none;display:inline-block}
+.rsvptag{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;border:2px solid var(--ink);border-radius:999px;padding:0 7px;margin-top:3px;background:var(--paper)}
+.rsvptag.r-going{background:var(--green)} .rsvptag.r-maybe{background:var(--yellow)} .rsvptag.r-no{background:#FFC2C2} .rsvptag.r-none{color:var(--soft);border-color:#C9C9D3}
+.pill.att{padding:5px 10px}
+.pill.att.on{background:var(--green)} .pill.att.off{background:#FF9E9E}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 body{margin:0}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
@@ -482,7 +487,7 @@ purgeSamples();
 const CFG=window.BB_CONFIG||{};
 const sb=(window.supabase&&CFG.url&&CFG.key&&!/PASTE/.test(CFG.url+CFG.key))?window.supabase.createClient(CFG.url,CFG.key):null;
 const ME={id:null,name:"",admin:false,anon:true};
-const G={rsvps:{},ready:false,members:[],feedback:[],feedbackReady:true};           // everyone's RSVPs by month: [{name,status,mine}]
+const G={att:{},attReady:true,rsvps:{},ready:false,members:[],feedback:[],feedbackReady:true,contacts:{},contactsReady:true};           // everyone's RSVPs by month: [{name,status,mine}]
 const PLAN_KEYS=["plan","details","every"];
 const MINE_KEYS=["seed","prep","wb","commits","secretDone","invite"];
 let SYNC="idle",planTimer=null,mineTimer=null,lastPlan="",lastMine="";
@@ -510,15 +515,17 @@ async function loadPlan(){if(!sb)return;const {data}=await sb.from("shared_state
   if(data&&data.data){lastPlan=JSON.stringify(data.data);Object.assign(S,data.data)}}
 async function loadAll(){if(!sb||!ME.id)return;
   const q=t=>sb.from(t).select("*");
-  const [mine,rs,cl,pr,hits,jn,nt,ph,int,_plan,mem,fb]=await Promise.all([
+  const [mine,rs,cl,pr,hits,jn,nt,ph,int,_plan,mem,fb,cts,att]=await Promise.all([
     sb.from("user_state").select("data").eq("user_id",ME.id).maybeSingle(),q("rsvps"),q("claims"),
     sb.from("prayers").select("*").order("created_at",{ascending:false}),q("prayer_hits"),
     sb.from("journal").select("*").order("created_at",{ascending:true}),sb.from("notes").select("*").order("created_at",{ascending:true}),
-    q("photos"),ME.admin?sb.from("interested").select("*").order("created_at",{ascending:false}):Promise.resolve({data:[]}),loadPlan(),sb.from("members").select("id,name,created_at").order("created_at",{ascending:true}),sb.from("feedback").select("*").order("created_at",{ascending:false})]);
+    q("photos"),ME.admin?sb.from("interested").select("*").order("created_at",{ascending:false}):Promise.resolve({data:[]}),loadPlan(),sb.from("members").select("id,name,created_at").order("created_at",{ascending:true}),sb.from("feedback").select("*").order("created_at",{ascending:false}),ME.admin?sb.from("member_contacts").select("*"):sb.from("member_contacts").select("*").eq("user_id",ME.id),ME.admin?sb.from("attendance").select("*"):Promise.resolve({data:[]})]);
   G.members=(mem&&mem.data)||[];
   G.feedback=(fb&&fb.data)||[];G.feedbackReady=!(fb&&fb.error);
+  G.contactsReady=!(cts&&cts.error);
+  G.attReady=!(att&&att.error);G.att={};((att&&att.data)||[]).forEach(a=>{(G.att[a.month]=G.att[a.month]||{})[a.user_id]=a.attended});G.contacts=Object.fromEntries(((cts&&cts.data)||[]).map(c=>[c.user_id,c]));
   if(mine.data&&mine.data.data){lastMine=JSON.stringify(mine.data.data);Object.assign(S,mine.data.data)}
-  S.rsvp={};G.rsvps={};(rs.data||[]).forEach(r=>{const m=r.user_id===ME.id;if(m)S.rsvp[r.month]=r.status;(G.rsvps[r.month]=G.rsvps[r.month]||[]).push({name:r.name,status:r.status,mine:m})});
+  S.rsvp={};G.rsvps={};(rs.data||[]).forEach(r=>{const m=r.user_id===ME.id;if(m)S.rsvp[r.month]=r.status;(G.rsvps[r.month]=G.rsvps[r.month]||[]).push({uid:r.user_id,name:r.name,status:r.status,mine:m})});
   S.claims={};(cl.data||[]).forEach(c=>{(S.claims[c.month]=S.claims[c.month]||{})[c.item]=c.user_id===ME.id?"You":c.name});
   const H=hits.data||[];
   S.prayers=(pr.data||[]).map(p=>({id:p.id,who:p.user_id===ME.id?"You":p.name,mine:p.user_id===ME.id,text:p.text,ans:p.answered,when:ago(p.created_at),n:H.filter(h=>h.prayer_id===p.id).length,me:H.some(h=>h.prayer_id===p.id&&h.user_id===ME.id)}));
@@ -552,9 +559,16 @@ async function boot(){
   if(!session){page="welcome";welcomeMode="join";render();return}
   await afterSignIn();
   if(!ME.name){page="welcome";welcomeMode="name";render();return}
-  try{await loadAll()}catch(e){console.error(e)}SYNC="idle";render();paintSync();
+  try{await loadAll()}catch(e){console.error(e)}SYNC="idle";
+  if(needsContact()){page="welcome";welcomeMode="contact"}
+  render();paintSync();
   document.addEventListener("visibilitychange",async()=>{if(document.visibilityState==="visible"&&ME.id&&!page){try{await loadAll();render()}catch(e){}}});
 }
+function needsContact(){return !!(ME.id&&!ME.admin&&G.contactsReady&&!G.contacts[ME.id])}
+const digits=p=>String(p||"").replace(/\D/g,"");
+const validPhone=p=>digits(p).length>=10;
+const validEmail=e=>!e||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+async function saveContact(phone,email){const {error}=await sb.from("member_contacts").upsert({user_id:ME.id,phone:phone.slice(0,30),email:(email||"").slice(0,120)||null,updated_at:new Date().toISOString()});if(error)throw error;G.contacts[ME.id]={user_id:ME.id,phone,email}}
 async function refresh(){try{await loadAll()}catch(e){}render()}
 
 /* welcome / sign-in screens */
@@ -567,9 +581,16 @@ function welcomeView(){
      <label class="field"><span class="label">Password</span><input type="password" id="h-pass" autocomplete="current-password" required></label>
      <label class="field"><span class="label">Your first name</span><input type="text" id="h-name" autocomplete="given-name" placeholder="Shown to the group"></label>
      <button class="btn block" type="submit">Sign in</button><button type="button" class="x" data-wmode="join">I'm not a host</button></form>`;
+  else if(welcomeMode==="contact") form=`<form class="box" data-contactform><div class="h2">How can we reach you, ${esc(ME.name)}?</div>
+     <p class="who" style="margin-top:-4px">Add your phone number so the host can text you reminders and updates. Only the host can see it.</p>
+     <label class="field"><span class="label">Phone number</span><input type="text" inputmode="tel" id="c-phone" autocomplete="tel" required placeholder="(801) 555-0123"></label>
+     <label class="field"><span class="label">Email (optional)</span><input type="text" inputmode="email" id="c-email" autocomplete="email"></label>
+     <button class="btn block" type="submit">Save and continue</button></form>`;
   else form=`<form class="box" data-joinform><div class="h2">${welcomeMode==="name"?"What should we call you?":"Join the group"}</div>
-     <p class="who" style="margin-top:-4px">Just your first name. It shows next to your RSVPs, sign-ups, and prayer requests.</p>
+     <p class="who" style="margin-top:-4px">Your first name shows next to your RSVPs, sign-ups, and prayer requests. Your phone number is only for the host, for reminders and updates.</p>
      <label class="field"><span class="label">Your first name</span><input type="text" id="j-name" autocomplete="given-name" required maxlength="60"></label>
+     <label class="field"><span class="label">Phone number</span><input type="text" inputmode="tel" id="j-phone" autocomplete="tel" required placeholder="(801) 555-0123"></label>
+     <label class="field"><span class="label">Email (optional)</span><input type="text" inputmode="email" id="j-email" autocomplete="email"></label>
      <button class="btn block" type="submit">Let's go</button>${welcomeMode==="join"?`<button type="button" class="x" data-wmode="host">Host sign-in</button>`:""}</form>`;
   return `<div class="scroll" id="dscroll"><div class="pad" style="padding-top:28px">
     <div class="brand" style="text-align:center;font-size:42px">Bible Brunch<span class="dot">.</span></div>
@@ -579,6 +600,9 @@ function setupView(){return `<div class="scroll" id="dscroll"><div class="pad" s
   <div class="box"><p>This copy of Bible Brunch isn't connected to its database yet. Open <b>config.js</b> and paste in your Supabase project URL and anon key, then upload the site again.</p></div></div></div>`}
 function accountSheet(){sheet(`<div class="h2">Your account</div>
   <form data-renameform style="display:flex;flex-direction:column;gap:10px"><label class="field"><span class="label">Your first name</span><input type="text" id="acct-name" value="${esc(ME.name)}" maxlength="60"></label><button class="btn y" type="submit">Save name</button></form>
+  ${!ME.admin&&G.contactsReady?`<form data-acctcontact style="display:flex;flex-direction:column;gap:10px"><label class="field"><span class="label">Phone number</span><input type="text" inputmode="tel" id="acct-phone" value="${esc((G.contacts[ME.id]||{}).phone||"")}" autocomplete="tel"></label>
+   <label class="field"><span class="label">Email (optional)</span><input type="text" inputmode="email" id="acct-email" value="${esc((G.contacts[ME.id]||{}).email||"")}" autocomplete="email"></label>
+   <p class="who" style="margin:0">Only the host can see these.</p><button class="btn y" type="submit">Save contact info</button></form>`:""}
   ${ME.anon?`<p class="who">You're signed in on this phone only. If you clear your browser, you'll join again as a new person.</p><button class="x" data-wmode-host>Host sign-in</button>`:`<button class="btn w block" data-signout>Sign out</button>`}
   <button class="x" data-reset>Reset my progress</button>`)}
 
@@ -643,6 +667,31 @@ function feedbackSheet(k){const ks=months().filter(x=>S.plan[x]&&eventDate(x,byI
    <div class="field"><span class="label">Tap any that fit</span><div class="fbchips">${FB_REASONS.map((r,i)=>`<label class="fbchip"><input type="checkbox" id="fb-r-${i}" value="${esc(r)}"><span>${esc(r)}</span></label>`).join("")}</div></div>
    <label class="field"><span class="label">Anything else? (optional)</span><textarea id="fb-text" maxlength="1000" placeholder="e.g. Saturdays at 10 are hard with nap time. 4 PM would be easier."></textarea></label>
    <button class="btn block" type="submit">Send feedback</button></form>`)}
+function attendanceBox(k){if(!G.attReady)return `<div class="box"><p>Attendance isn't set up yet. Run the latest SQL in Supabase, then reload.</p></div>`;
+  const rs=G.rsvps[k]||[];const A=G.att[k]||{};const byUid=Object.fromEntries(rs.map(r=>[r.uid,r]));
+  const people=G.members.map(m=>({uid:m.id,name:m.name,status:(byUid[m.id]||{}).status||""}));
+  rs.forEach(r=>{if(!people.some(p=>p.uid===r.uid))people.push({uid:r.uid,name:r.name,status:r.status})});
+  const order={going:0,maybe:1,no:2,"":3};people.sort((a,b)=>order[a.status]-order[b.status]||a.name.localeCompare(b.name));
+  const n=s=>people.filter(p=>p.status===s).length;const came=people.filter(p=>A[p.uid]===true).length,ns=people.filter(p=>A[p.uid]===false).length;
+  const lab={going:"Going",maybe:"Maybe",no:"Can't come","":"No RSVP"};
+  return `<div class="box"><div class="h2">RSVPs & attendance</div>
+   <p class="who" style="margin-top:-6px">Only hosts see this. Going ${n("going")} · Maybe ${n("maybe")} · Can't ${n("no")} · <b style="color:var(--ink)">Came ${came}</b>${ns?` · No-show ${ns}`:""}</p>
+   ${people.length?`<ul class="list">${people.map(p=>{const v=A[p.uid];return `<li><div class="grow">${esc(p.name)}<div><span class="rsvptag r-${p.status||"none"}">${lab[p.status]}</span></div></div>
+     <button class="pill att ${v===true?"on":""}" data-att="${p.uid}" data-k="${k}" data-v="1" aria-pressed="${v===true}">Came</button>
+     <button class="pill att ${v===false?"off":""}" data-att="${p.uid}" data-k="${k}" data-v="0" aria-pressed="${v===false}">No-show</button></li>`}).join("")}</ul>`:`<p class="who">No one has joined yet.</p>`}
+  </div>`}
+function attendanceSummary(uid){let came=0,ns=0;Object.values(G.att).forEach(m=>{if(m[uid]===true)came++;else if(m[uid]===false)ns++});return {came,ns}}
+function membersLog(){if(!G.contactsReady)return `<div class="box"><p>Contact info isn't set up yet. Run the contacts SQL in Supabase, then reload.</p></div>`;
+  const L=G.members.slice().sort((a,b)=>a.name.localeCompare(b.name));const withPhone=L.filter(m=>G.contacts[m.id]).length;const missing=L.filter(m=>!G.contacts[m.id]&&m.id!==ME.id).length;
+  const rsvpsFor=m=>Object.entries(G.rsvps).filter(([k,rs])=>rs.some(r=>(r.uid?r.uid===m.id:r.name===m.name)&&r.status==="going")).map(([k])=>k).sort();
+  return `<div class="box tint" style="flex-direction:row;align-items:center;gap:16px"><span class="big">${L.length}</span><p><b>members</b><br><span class="who">${withPhone} with a phone number${missing?` · ${missing} will be asked next time they open the app`:""}</span></p></div>
+   <button class="btn y block" data-copyphones>Copy all phone numbers</button>
+   <div class="box">${L.length?L.map(m=>{const c=G.contacts[m.id];const going=rsvpsFor(m);return `<div class="entry"><div class="by"><span><b style="color:var(--ink);font-size:16px">${esc(m.name)}</b>${m.id===ME.id?" (you)":""}</span><span>Joined ${shortDate(m.created_at)}</span></div>
+     ${c?`<p><b style="user-select:all">${esc(fmtPhone(c.phone))}</b>${c.email?`<br><span style="user-select:all">${esc(c.email)}</span>`:""}</p>
+       <div class="row" style="flex-wrap:wrap"><a class="pill" href="sms:${digits(c.phone)}">Text</a><a class="pill" href="tel:${digits(c.phone)}">Call</a>${c.email?`<a class="pill" href="mailto:${esc(c.email)}">Email</a>`:""}</div>`
+      :`<p class="who">${m.id===ME.id?"Hosts aren't asked for a phone number.":"No phone yet. They'll be asked the next time they open the app."}</p>`}
+     ${going.length?`<p class="who" style="margin:0">RSVPed going to: ${going.map(k=>esc(byId[S.plan[k]]?byId[S.plan[k]].name:monShort(k))).join(", ")}</p>`:""}
+     ${(()=>{const a=attendanceSummary(m.id);return a.came||a.ns?`<p class="who" style="margin:0"><b style="color:var(--ink)">Came ${a.came} time${a.came===1?"":"s"}</b>${a.ns?` · No-show ${a.ns}`:""}</p>`:""})()}</div>`}).join(""):`<p class="who">Nobody has joined yet.</p>`}</div>`}
 function feedbackLog(){if(!G.feedbackReady)return `<div class="box"><p>Feedback isn't set up yet. Run the feedback SQL in Supabase, then reload.</p></div>`;
   const L=G.feedback;const open=L.filter(f=>!f.resolved),done=L.filter(f=>f.resolved);
   const card=f=>`<div class="entry"><div class="by"><span><b style="color:var(--ink)">${esc(f.name)}</b> · ${ago(f.created_at)}</span>${f.resolved?`<span class="kind" style="background:var(--green)">Handled</span>`:""}</div>
@@ -734,6 +783,7 @@ function prep(t,k){
   const r=S.rsvp[k]||"";const claims=S.claims[k]||{};const items=[...new Set(bringOf(k,t).concat(Object.keys(claims)))];const pc=S.prep[k]||{};
   const tasks=prepTasksOf(k,t);
   return `
+   ${ME.admin?attendanceBox(k):""}
    <div class="box"><div class="h2">Are you coming?</div>
     <div class="seg" role="group" aria-label="RSVP">${[["going","Going"],["maybe","Maybe"],["no","Can't come"]].map(([v,l])=>`<button data-rsvp="${v}" data-key="${k}" aria-pressed="${r===v}">${l}</button>`).join("")}</div>
     ${faces(k)}</div>
@@ -934,6 +984,8 @@ function collective(){
        ${ns.map(n=>`<div class="entry"><div class="by"><span>On: ${esc(n.q)}</span><span class="row"><span class="kind note">Group note</span>${n.sample?`<span class="sample">Sample</span>`:""}</span></div><p>${esc(n.text)}</p></div>`).join("")}</div>`}).join("");
   } else if(ctab==="Challenges"){
     body=challenges(curGathering());
+  } else if(ctab==="Members"){
+    body=membersLog();
   } else if(ctab==="Feedback"){
     body=feedbackLog();
   } else if(ctab==="Interested"){
@@ -945,7 +997,7 @@ function collective(){
       <button class="pray" data-pray="${p.id}" aria-pressed="${p.me}">${p.me?"Praying":"I'll pray"} · ${p.n}</button></div></div>`).join("")}</div>`;
   }
   return `<div class="top"><div><div class="brand">The Collective<span class="dot">.</span></div><div class="sub">Everything we've gathered, all in one place.</div></div></div>
-   <div class="pad"><div class="chips">${["Photos","Journal","Challenges","Prayer"].concat(ME.admin?["Feedback","Interested"]:[]).map(x=>`<button class="chip" data-ctab="${x}" aria-pressed="${ctab===x}">${x}</button>`).join("")}</div>${body}</div>`;
+   <div class="pad"><div class="chips">${["Photos","Journal","Challenges","Prayer"].concat(ME.admin?["Members","Feedback","Interested"]:[]).map(x=>`<button class="chip" data-ctab="${x}" aria-pressed="${ctab===x}">${x}</button>`).join("")}</div>${body}</div>`;
 }
 
 /* ---------- plan + themes ---------- */
@@ -1213,6 +1265,11 @@ document.addEventListener("click",e=>{
   else if(ds.starter){const ta=document.getElementById("inv-note");ta.value=NOTE_STARTERS[ds.starter];ta.focus();inv().note=ta.value;save();refreshInvite()}
   else if(ds.copy){if(ds.copy==="msg")copyText(inviteMsg(),"copybox");else if(ds.copy==="link")copyText(inviteLink(),"copybox");else copyText(document.getElementById("replybox").value,"replybox")}
   else if(ds.saveimg!==undefined){saveCardImage()}
+  else if(ds.att){if(!ME.admin)return;const k=ds.k,uid=ds.att,val=ds.v==="1";const M=G.att[k]=G.att[k]||{};const prev=M[uid];
+    if(prev===val){delete M[uid];render();dbTry(sb.from("attendance").delete().eq("month",k).eq("user_id",uid)).catch(()=>refresh())}
+    else{M[uid]=val;render();if(val)burst(e,k,12);dbTry(sb.from("attendance").upsert({month:k,user_id:uid,attended:val,marked_at:new Date().toISOString()})).catch(()=>refresh())}}
+  else if(ds.copyphones!==undefined){const txt=G.members.filter(m=>G.contacts[m.id]).map(m=>`${m.name}: ${fmtPhone(G.contacts[m.id].phone)}`).join("\n");if(!txt){toast("No phone numbers yet");return}
+    navigator.clipboard.writeText(txt).then(()=>toast("Copied")).catch(()=>{sheet(`<div class="h2">Phone numbers</div><textarea readonly style="min-height:200px">${esc(txt)}</textarea>`)})}
   else if(ds.feedback!==undefined){if(!ME.id){toast("Join the group first");return}feedbackSheet(ds.feedback||"")}
   else if(ds.ctabGo){tab="collective";ctab=ds.ctabGo;detailId=null;page=null;render();document.getElementById("main").scrollTop=0}
   else if(ds.fbdone){const f=G.feedback.find(x=>x.id===ds.fbdone);f.resolved=true;render();dbTry(sb.from("feedback").update({resolved:true}).eq("id",f.id)).catch(()=>refresh())}
@@ -1240,7 +1297,7 @@ document.addEventListener("click",e=>{
   else if(ds.dtab){const jump=!b.closest(".dtabs");dtab=ds.dtab;render();if(jump){const sc=document.getElementById("dscroll");sc.scrollTop=document.querySelector(".dtabs").offsetTop}}
   else if(ds.rsvp){const k=ds.key;const nv=S.rsvp[k]===ds.rsvp?"":ds.rsvp;
     const p=nv?sb.from("rsvps").upsert({month:k,user_id:ME.id,name:ME.name,status:nv}):sb.from("rsvps").delete().eq("month",k).eq("user_id",ME.id);
-    S.rsvp[k]=nv;const L=(G.rsvps[k]=(G.rsvps[k]||[]).filter(r=>!r.mine));if(nv)L.push({name:ME.name,status:nv,mine:true});render();if(nv==="going"){toast("See you there!");burst(e,k)}
+    S.rsvp[k]=nv;const L=(G.rsvps[k]=(G.rsvps[k]||[]).filter(r=>!r.mine));if(nv)L.push({uid:ME.id,name:ME.name,status:nv,mine:true});render();if(nv==="going"){toast("See you there!");burst(e,k)}
     dbTry(p).catch(()=>refresh())}
   else if(ds.claim){const k=ds.key,item=ds.claim;const c=O2(S.claims,k);
     if(c[item]==="You"){delete c[item];render();toast("Released");dbTry(sb.from("claims").delete().eq("month",k).eq("item",item)).catch(()=>refresh())}
@@ -1331,20 +1388,32 @@ document.addEventListener("submit",e=>{e.preventDefault();const f=e.target,ds=f.
     const o={date,time,place:document.getElementById("ed-place").value.trim(),host:document.getElementById("ed-host").value.trim(),setting:document.getElementById("ed-setup").value.trim(),flow:det(k).flow};if(!o.flow)delete o.flow;let nk=date.slice(0,7);if(nk===k.slice(0,7))nk=k;else{let n=2,base=nk;while(S.plan[nk])nk=`${base}~${n++}`}
     if(nk!==k){
       S.plan[nk]=S.plan[k];delete S.plan[k];["rsvp","claims","extra","prep","wb","photos","commits","secretDone"].forEach(f=>{if(S[f]&&S[f][k]!==undefined){S[f][nk]=S[f][k];delete S[f][k]}});G.rsvps[nk]=G.rsvps[k];delete G.rsvps[k];
-      Promise.all(["rsvps","claims","journal","notes"].map(tb=>sb.from(tb).update({month:nk}).eq("month",k))).then(rs=>{if(rs.some(r=>r.error))toast("Some sign-ups didn't move. Check your connection.")});
+      Promise.all(["rsvps","claims","journal","notes","attendance"].map(tb=>sb.from(tb).update({month:nk}).eq("month",k))).then(rs=>{if(rs.some(r=>r.error))toast("Some sign-ups didn't move. Check your connection.")});
       if(S.photos[nk])sb.from("photos").upsert({month:nk,data:S.photos[nk],user_id:ME.id}).then(()=>sb.from("photos").delete().eq("month",k));
       S.gnotes.forEach(n=>{if(n.key===k)n.key=nk});S.journal.forEach(j=>{if(j.key===k)j.key=nk});if(S.details)delete S.details[k];if(detailKey===k)detailKey=nk}
     (S.details=S.details||{})[nk]=o;save();closeSheet();render();toast("Saved")}
   else if(ds.prayform!==undefined){const v=document.getElementById("pwall").value.trim();if(!v){toast("Write a request first");return}dbTry(sb.from("prayers").insert({user_id:ME.id,name:ME.name,text:v.slice(0,1000)})).then(()=>{toast("Posted");refresh()}).catch(()=>{})}
-  else if(ds.joinform!==undefined){const n=document.getElementById("j-name").value.trim().slice(0,60);if(!n){toast("Add your first name");return}const btn=f.querySelector("button[type=submit]");btn.disabled=true;
+  else if(ds.joinform!==undefined){const n=document.getElementById("j-name").value.trim().slice(0,60);if(!n){toast("Add your first name");return}
+    const ph=document.getElementById("j-phone").value.trim(),em=document.getElementById("j-email").value.trim();
+    if(!validPhone(ph)){toast("Add your phone number, with area code");return}if(!validEmail(em)){toast("That email doesn't look right");return}
+    const btn=f.querySelector("button[type=submit]");btn.disabled=true;
     (async()=>{try{if(!ME.id){const {error}=await sb.auth.signInAnonymously();if(error)throw error;await afterSignIn()}
-      const {error:e2}=await sb.from("members").upsert({id:ME.id,name:n});if(e2)throw e2;ME.name=n;page=null;await loadAll();render();toast(`Welcome, ${n}!`)}
+      const {error:e2}=await sb.from("members").upsert({id:ME.id,name:n});if(e2)throw e2;ME.name=n;
+      try{await saveContact(ph,em)}catch(e3){console.error(e3)}
+      page=null;await loadAll();render();toast(`Welcome, ${n}!`)}
      catch(err){console.error(err);btn.disabled=false;toast("Couldn't join. Check your connection and try again.")}})()}
   else if(ds.hostform!==undefined){const em=document.getElementById("h-email").value.trim(),pw=document.getElementById("h-pass").value,nm=document.getElementById("h-name").value.trim().slice(0,60);const btn=f.querySelector("button[type=submit]");btn.disabled=true;
     (async()=>{try{const {error}=await sb.auth.signInWithPassword({email:em,password:pw});if(error)throw error;await afterSignIn();
       if(nm||!ME.name){const name=nm||ME.name||"Host";await sb.from("members").upsert({id:ME.id,name});ME.name=name}
       page=null;await loadAll();render();toast(ME.admin?"Signed in as host":"Signed in")}
      catch(err){console.error(err);btn.disabled=false;toast("That email and password didn't work.")}})()}
+  else if(ds.contactform!==undefined){const ph=document.getElementById("c-phone").value.trim(),em=document.getElementById("c-email").value.trim();
+    if(!validPhone(ph)){toast("Add your phone number, with area code");return}if(!validEmail(em)){toast("That email doesn't look right");return}
+    const btn=f.querySelector("button[type=submit]");btn.disabled=true;
+    saveContact(ph,em).then(()=>{page=null;render();toast("Thanks! You're all set.")}).catch(()=>{btn.disabled=false;toast("Couldn't save. Check your connection.")})}
+  else if(ds.acctcontact!==undefined){const ph=document.getElementById("acct-phone").value.trim(),em=document.getElementById("acct-email").value.trim();
+    if(!validPhone(ph)){toast("Add your phone number, with area code");return}if(!validEmail(em)){toast("That email doesn't look right");return}
+    saveContact(ph,em).then(()=>{closeSheet();toast("Contact info saved")}).catch(()=>toast("Couldn't save. Check your connection."))}
   else if(ds.renameform!==undefined){const n=document.getElementById("acct-name").value.trim().slice(0,60);if(!n)return;dbTry(sb.from("members").upsert({id:ME.id,name:n})).then(()=>{ME.name=n;if(S.invite&&!S.invite.name)S.invite.name=n;closeSheet();render();toast("Name saved")}).catch(()=>{})}
 });
 document.addEventListener("input",e=>{const fd=e.target.dataset;
