@@ -118,6 +118,35 @@ button.tile:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .allme{display:flex;align-items:center;gap:12px;background:var(--paper);border:2.5px solid var(--ink);border-radius:16px;padding:10px 12px}
 .allme b{display:block;font-size:17px}
 .col{display:flex;flex-direction:column;gap:10px}
+.etools{display:flex;gap:18px;justify-content:flex-end}
+.erow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.heart{border:2.5px solid var(--ink);background:var(--paper);border-radius:999px;padding:4px 12px;font-weight:900;font-size:15px;color:#E0457B;line-height:1.2}
+.heart[aria-pressed="true"]{background:#FFD0E4}.heart span{color:var(--ink);font-size:13px}
+.pcell .heart{align-self:flex-start;margin-top:2px}
+.vote{border:2.5px solid var(--ink);background:var(--paper);border-radius:12px;padding:6px 10px;font-weight:900;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.vote[aria-pressed="true"]{background:#FFD0E4}.vote span{font-size:13px}
+.votehead{display:flex;flex-direction:column;gap:6px}
+details.jg{padding:0}details.jg>summary,details.jsub>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px}
+details.jg>summary::-webkit-details-marker,details.jsub>summary::-webkit-details-marker{display:none}
+details.jg>summary{padding:14px 16px}details.jg[open]>summary{border-bottom:2px dashed var(--line,#ddd)}
+details.jg>.jsub{margin:10px 14px}details.jg>.jsub:last-child{margin-bottom:14px}
+details.jsub{border:2.5px solid var(--ink);border-radius:16px;padding:10px 12px;background:var(--paper)}
+details.jsub>summary{font-weight:900;font-size:15px}details.jsub[open]>summary{margin-bottom:6px}
+.chev{margin-left:auto;font-weight:900;font-size:22px;transition:transform .2s}details[open]>summary .chev{transform:rotate(90deg)}
+summary .grow{display:flex;flex-direction:column}
+.upnext{flex-direction:row!important;align-items:center;gap:12px;text-align:left;background:#C9F2FF;cursor:pointer;width:100%}
+.upnext .grow{display:flex;flex-direction:column;gap:2px}
+.intab .dtop{padding-top:4px}
+.list.mine li{align-items:center}.list.mine .info{flex:1;text-align:left;background:none;border:0;padding:0;display:flex;flex-direction:column}
+.list.mine .info small{font-weight:700;color:var(--muted,#555)}
+.kind.st-going{background:var(--green)}.kind.st-maybe{background:#FFE6A8}.kind.st-no{background:#FFD0E4}
+.statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.statrow .box{padding:10px;align-items:flex-start;gap:0}.statrow .big{font-size:30px}
+.arow{display:flex;flex-direction:column;padding:7px 0;border-top:2px dashed var(--line,#ddd)}.arow:first-of-type{border-top:0}
+.bar{display:grid;grid-template-columns:1fr 90px 28px;gap:8px;align-items:center;font-size:13.5px;font-weight:700;padding:3px 0}
+.bar .track{height:10px;border:2px solid var(--ink);border-radius:99px;overflow:hidden;background:var(--paper)}.bar .track span{display:block;height:100%;background:var(--pink,#FF4FA0)}
+.bar b{text-align:right}
+.mtools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.dupe{background:#FFE6A8;border:2px solid var(--ink);border-radius:12px;padding:8px 10px;font-size:13.5px;font-weight:700}
 .list .grow{flex:1;min-width:0;font-weight:800}
 .list .who{font-size:13px;font-weight:700;color:var(--soft)}
 .pill{border:2.5px solid var(--ink);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:900;white-space:nowrap}
@@ -193,7 +222,8 @@ textarea{min-height:90px;resize:vertical}
 
 /* tabs */
 .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--paper);border-top:3px solid var(--ink);padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px))}
-.tabs button{border:2.5px solid transparent;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:12px;font-weight:900;border-radius:14px}
+.tabs button{border:2.5px solid transparent;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:11.5px;font-weight:900;border-radius:14px;white-space:nowrap;min-width:0}
+.tabs{gap:3px!important;padding-left:6px!important;padding-right:6px!important}
 .tabs svg{width:22px;height:22px}
 .tabs button[aria-current="page"]{background:var(--yellow);border-color:var(--ink)}
 
@@ -502,18 +532,19 @@ const ME={id:null,name:"",admin:false,anon:true};
 const G={att:{},attReady:true,rsvps:{},ready:false,members:[],feedback:[],feedbackReady:true,contacts:{},contactsReady:true};           // everyone's RSVPs by month: [{name,status,mine}]
 const PLAN_KEYS=["plan","details","every"];
 const MINE_KEYS=["seed","prep","wb","commits","secretDone","invite"];
-let SYNC="idle",planTimer=null,mineTimer=null,lastPlan="",lastMine="";
+let SYNC="idle",planTimer=null,mineTimer=null,lastPlan="",lastMine="",planDirty=false,mineDirty=false;
 const pick=(o,ks)=>Object.fromEntries(ks.filter(k=>o[k]!==undefined).map(k=>[k,o[k]]));
 const save=()=>{try{const c={...S};delete c.photos;localStorage.setItem(KEY,JSON.stringify(c))}catch(e){}
   if(!sb||!ME.id)return true;
-  if(ME.admin){clearTimeout(planTimer);planTimer=setTimeout(pushPlan,700)}
-  clearTimeout(mineTimer);mineTimer=setTimeout(pushMine,700);return true};
-async function pushPlan(){const j=JSON.stringify(pick(S,PLAN_KEYS));if(j===lastPlan)return;setSync("saving");
+  if(ME.admin){planDirty=true;clearTimeout(planTimer);planTimer=setTimeout(pushPlan,400)}
+  mineDirty=true;clearTimeout(mineTimer);mineTimer=setTimeout(pushMine,400);return true};
+function flushSaves(){const w=[];if(planDirty&&ME.admin){clearTimeout(planTimer);w.push(pushPlan())}if(mineDirty){clearTimeout(mineTimer);w.push(pushMine())}return Promise.all(w)}
+async function pushPlan(){const j=JSON.stringify(pick(S,PLAN_KEYS));if(j===lastPlan){planDirty=false;return}setSync("saving");
   const {error}=await sb.from("shared_state").upsert({id:"plan",data:JSON.parse(j),updated_at:new Date().toISOString()});
-  if(error){setSync("error",error)}else{lastPlan=j;setSync("saved")}}
-async function pushMine(){const j=JSON.stringify(pick(S,MINE_KEYS));if(j===lastMine)return;setSync("saving");
+  if(error){setSync("error",error)}else{lastPlan=j;if(JSON.stringify(pick(S,PLAN_KEYS))===j)planDirty=false;setSync("saved")}}
+async function pushMine(){const j=JSON.stringify(pick(S,MINE_KEYS));if(j===lastMine){mineDirty=false;return}setSync("saving");
   const {error}=await sb.from("user_state").upsert({user_id:ME.id,data:JSON.parse(j),updated_at:new Date().toISOString()});
-  if(error){setSync("error",error)}else{lastMine=j;setSync("saved")}}
+  if(error){setSync("error",error)}else{lastMine=j;if(JSON.stringify(pick(S,MINE_KEYS))===j)mineDirty=false;setSync("saved")}}
 function setSync(s,err){SYNC=s;if(err)console.error(err);if(s==="error")toast("Couldn't save. Check your connection.");paintSync()}
 function paintSync(){const el=document.getElementById("sync");if(!el)return;
   const who=ME.name?`${esc(ME.name)}${ME.admin?" (host)":""}`:"";
@@ -524,26 +555,30 @@ const ago=ts=>{const s=(Date.now()-new Date(ts))/1000;if(s<90)return "Just now";
 const shortDate=ts=>new Date(ts).toLocaleDateString("en-US",{month:"short",day:"numeric"});
 
 async function loadPlan(){if(!sb)return;const {data}=await sb.from("shared_state").select("data").eq("id","plan").maybeSingle();
-  if(data&&data.data){lastPlan=JSON.stringify(data.data);Object.assign(S,data.data)}}
-async function loadAll(){if(!sb||!ME.id)return;
+  if(planDirty)return;if(data&&data.data){lastPlan=JSON.stringify(data.data);Object.assign(S,pick(data.data,PLAN_KEYS))}}
+async function loadAll(){if(!sb||!ME.id)return;await flushSaves().catch(()=>{});
   const q=t=>sb.from(t).select("*");
-  const [mine,rs,cl,pr,hits,jn,nt,ph,int,_plan,mem,fb,cts,att]=await Promise.all([
+  const since=new Date(Date.now()-30*864e5).toISOString();
+  const [mine,rs,cl,pr,hits,jn,nt,ph,int,_plan,mem,fb,cts,att,tv,hr,shl,pv]=await Promise.all([
     sb.from("user_state").select("data").eq("user_id",ME.id).maybeSingle(),q("rsvps"),q("claims"),
     sb.from("prayers").select("*").order("created_at",{ascending:false}),q("prayer_hits"),
     sb.from("journal").select("*").order("created_at",{ascending:true}),sb.from("notes").select("*").order("created_at",{ascending:true}),
-    q("photos"),ME.admin?sb.from("interested").select("*").order("created_at",{ascending:false}):Promise.resolve({data:[]}),loadPlan(),sb.from("members").select("id,name,created_at").order("created_at",{ascending:true}),sb.from("feedback").select("*").order("created_at",{ascending:false}),ME.admin?sb.from("member_contacts").select("*"):sb.from("member_contacts").select("*").eq("user_id",ME.id),ME.admin?sb.from("attendance").select("*"):Promise.resolve({data:[]})]);
+    q("photos"),ME.admin?sb.from("interested").select("*").order("created_at",{ascending:false}):Promise.resolve({data:[]}),loadPlan(),sb.from("members").select("id,name,created_at").order("created_at",{ascending:true}),sb.from("feedback").select("*").order("created_at",{ascending:false}),ME.admin?sb.from("member_contacts").select("*"):sb.from("member_contacts").select("*").eq("user_id",ME.id),ME.admin?sb.from("attendance").select("*"):Promise.resolve({data:[]}),
+    q("theme_votes"),q("hearts"),ME.admin?sb.from("share_log").select("*").order("created_at",{ascending:false}):Promise.resolve({data:[]}),
+    ME.admin?sb.from("page_views").select("user_id,name,page,created_at").gte("created_at",since).order("created_at",{ascending:false}).limit(5000):Promise.resolve({data:[]})]);
+  G.v3=!(tv&&tv.error);G.votes=(tv&&tv.data)||[];G.hearts=(hr&&hr.data)||[];G.shares=(shl&&shl.data)||[];G.views=(pv&&pv.data)||[];
   G.members=(mem&&mem.data)||[];
   G.feedback=(fb&&fb.data)||[];G.feedbackReady=!(fb&&fb.error);
   G.contactsReady=!(cts&&cts.error);
   G.attReady=!(att&&att.error);G.att={};((att&&att.data)||[]).forEach(a=>{(G.att[a.month]=G.att[a.month]||{})[a.user_id]=a.attended});G.contacts=Object.fromEntries(((cts&&cts.data)||[]).map(c=>[c.user_id,c]));
-  if(mine.data&&mine.data.data){lastMine=JSON.stringify(mine.data.data);Object.assign(S,mine.data.data)}
+  if(!mineDirty&&mine.data&&mine.data.data){lastMine=JSON.stringify(mine.data.data);Object.assign(S,pick(mine.data.data,MINE_KEYS))}
   S.rsvp={};G.rsvps={};(rs.data||[]).forEach(r=>{const m=r.user_id===ME.id;if(m)S.rsvp[r.month]=r.status;(G.rsvps[r.month]=G.rsvps[r.month]||[]).push({uid:r.user_id,name:r.name,status:r.status,mine:m})});
   S.claims={};G.all={};(cl.data||[]).forEach(c=>{if(c.item.startsWith(ALLP)){const what=c.item.split("|").slice(2).join("|");(G.all[c.month]=G.all[c.month]||[]).push({uid:c.user_id,name:c.name,what,item:c.item,mine:c.user_id===ME.id});return}
     (S.claims[c.month]=S.claims[c.month]||{})[c.item]=c.user_id===ME.id?"You":c.name});
   const H=hits.data||[];
   S.prayers=(pr.data||[]).map(p=>({id:p.id,who:p.user_id===ME.id?"You":p.name,mine:p.user_id===ME.id,text:p.text,ans:p.answered,when:ago(p.created_at),n:H.filter(h=>h.prayer_id===p.id).length,me:H.some(h=>h.prayer_id===p.id&&h.user_id===ME.id)}));
-  S.journal=(jn.data||[]).map(j=>({id:j.id,key:j.month,who:j.user_id===ME.id?"You":j.name,text:j.text,shared:j.shared}));
-  S.gnotes=(nt.data||[]).map(n=>({id:n.id,key:n.month,q:n.question,text:n.text,who:n.user_id===ME.id?"You":n.name}));
+  S.journal=(jn.data||[]).map(j=>({id:j.id,key:j.month,who:j.user_id===ME.id?"You":j.name,mine:j.user_id===ME.id,text:j.text,shared:j.shared}));
+  S.gnotes=(nt.data||[]).map(n=>({id:n.id,key:n.month,q:n.question,text:n.text,mine:n.user_id===ME.id,who:n.user_id===ME.id?"You":n.name}));
   S.photos={};(ph.data||[]).forEach(p=>S.photos[p.month]=p.data);
   S.interested=(int.data||[]).map(x=>({id:x.id,name:x.name,phone:x.phone,by:x.invited_by||"",when:shortDate(x.created_at),status:x.status}));
   ["prep","wb","commits","secretDone","claims","rsvp","details"].forEach(f=>S[f]=S[f]||{});if(!S.invite)S.invite={name:ME.name,note:"",phone:"",overview:""};
@@ -560,8 +595,10 @@ function splitService(){const ks=Object.keys(S.plan||{});if(ks.some(k=>S.plan[k]
   let nk=k+"~2",n=3;while(S.plan[nk])nk=`${k}~${n++}`;S.plan[nk]="service2";S.details[nk]={date:"2026-12-19",time:d.time,place:d.place||"",host:d.host||""};return true}
 async function afterSignIn(){const {data:{user}}=await sb.auth.getUser();if(!user)return false;
   ME.id=user.id;ME.anon=!!user.is_anonymous;
-  const [adm,mem]=await Promise.all([sb.rpc("is_admin"),sb.from("members").select("name").eq("id",user.id).maybeSingle()]);
-  ME.admin=adm.data===true;ME.name=(mem.data&&mem.data.name)||"";
+  let [adm,mem]=await Promise.all([sb.rpc("is_admin"),sb.from("members").select("name").eq("id",user.id).maybeSingle()]);
+  for(let i=0;i<3&&adm.error;i++){await new Promise(r=>setTimeout(r,800*(i+1)));adm=await sb.rpc("is_admin")}
+  if(adm.error&&!user.is_anonymous){ME.admin=ME.admin||localStorage.getItem("bb-host")===user.id}else ME.admin=adm.data===true;
+  if(ME.admin)localStorage.setItem("bb-host",user.id);ME.name=(mem.data&&mem.data.name)||"";
   document.getElementById("phone").classList.toggle("admin",ME.admin);
   return true}
 async function boot(){
@@ -573,10 +610,14 @@ async function boot(){
   await afterSignIn();
   if(!ME.name){page="welcome";welcomeMode="name";render();return}
   try{await loadAll()}catch(e){console.error(e)}SYNC="idle";
-  if(needsContact()){page="welcome";welcomeMode="contact"}
+  if(needsContact()){page="welcome";welcomeMode="contact"}else if(needsFullName()){page="welcome";welcomeMode="fullname"}
   render();paintSync();
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")flushSaves().catch(()=>{})});
+  addEventListener("pagehide",()=>flushSaves().catch(()=>{}));
   document.addEventListener("visibilitychange",async()=>{if(document.visibilityState==="visible"&&ME.id&&!page){try{await loadAll();render()}catch(e){}}});
 }
+const fullName=n=>String(n||"").trim().split(/\s+/).filter(Boolean).length>=2;
+function needsFullName(){return !!(ME.id&&!ME.admin&&ME.name&&!fullName(ME.name))}
 function needsContact(){return !!(ME.id&&!ME.admin&&G.contactsReady&&!G.contacts[ME.id])}
 const digits=p=>String(p||"").replace(/\D/g,"");
 const validPhone=p=>digits(p).length>=10;
@@ -592,16 +633,20 @@ function welcomeView(){
   if(welcomeMode==="host") form=`<form class="box" data-hostform><div class="h2">Host sign-in</div>
      <label class="field"><span class="label">Email</span><input type="text" inputmode="email" id="h-email" autocomplete="username" required></label>
      <label class="field"><span class="label">Password</span><input type="password" id="h-pass" autocomplete="current-password" required></label>
-     <label class="field"><span class="label">Your first name</span><input type="text" id="h-name" autocomplete="given-name" placeholder="Shown to the group"></label>
+     <label class="field"><span class="label">Your full name</span><input type="text" id="h-name" autocomplete="name" placeholder="Shown to the group"></label>
      <button class="btn block" type="submit">Sign in</button><button type="button" class="x" data-wmode="join">I'm not a host</button></form>`;
   else if(welcomeMode==="contact") form=`<form class="box" data-contactform><div class="h2">How can we reach you, ${esc(ME.name)}?</div>
      <p class="who" style="margin-top:-4px">Add your phone number so the host can text you reminders and updates. Only the host can see it.</p>
      <label class="field"><span class="label">Phone number</span><input type="text" inputmode="tel" id="c-phone" autocomplete="tel" required placeholder="(801) 555-0123"></label>
      <label class="field"><span class="label">Email (optional)</span><input type="text" inputmode="email" id="c-email" autocomplete="email"></label>
      <button class="btn block" type="submit">Save and continue</button></form>`;
+  else if(welcomeMode==="fullname") form=`<form class="box" data-fullnameform><div class="h2">Add your last name, ${esc(ME.name)}</div>
+     <p class="who" style="margin-top:-4px">So we can tell people with the same first name apart.</p>
+     <label class="field"><span class="label">Your full name</span><input type="text" id="fn-name" autocomplete="name" required maxlength="60" value="${esc(ME.name)} " placeholder="First and last name"></label>
+     <button class="btn block" type="submit">Save and continue</button></form>`;
   else form=`<form class="box" data-joinform><div class="h2">${welcomeMode==="name"?"What should we call you?":"Join the group"}</div>
-     <p class="who" style="margin-top:-4px">Your first name shows next to your RSVPs, sign-ups, and prayer requests. Your phone number is only for the host, for reminders and updates.</p>
-     <label class="field"><span class="label">Your first name</span><input type="text" id="j-name" autocomplete="given-name" required maxlength="60"></label>
+     <p class="who" style="margin-top:-4px">Your name shows next to your RSVPs, sign-ups, and prayer requests. Your phone number is only for the host, for reminders and updates.</p>
+     <label class="field"><span class="label">Your full name</span><input type="text" id="j-name" autocomplete="name" required maxlength="60" placeholder="First and last name"></label>
      <label class="field"><span class="label">Phone number</span><input type="text" inputmode="tel" id="j-phone" autocomplete="tel" required placeholder="(801) 555-0123"></label>
      <label class="field"><span class="label">Email (optional)</span><input type="text" inputmode="email" id="j-email" autocomplete="email"></label>
      <button class="btn block" type="submit">Let's go</button>${welcomeMode==="join"?`<button type="button" class="x" data-wmode="host">Host sign-in</button>`:""}</form>`;
@@ -612,7 +657,7 @@ function welcomeView(){
 function setupView(){return `<div class="scroll" id="dscroll"><div class="pad" style="padding-top:28px"><div class="brand">Almost there<span class="dot">.</span></div>
   <div class="box"><p>This copy of Bible Brunch isn't connected to its database yet. Open <b>config.js</b> and paste in your Supabase project URL and anon key, then upload the site again.</p></div></div></div>`}
 function accountSheet(){sheet(`<div class="h2">Your account</div>
-  <form data-renameform style="display:flex;flex-direction:column;gap:10px"><label class="field"><span class="label">Your first name</span><input type="text" id="acct-name" value="${esc(ME.name)}" maxlength="60"></label><button class="btn y" type="submit">Save name</button></form>
+  <form data-renameform style="display:flex;flex-direction:column;gap:10px"><label class="field"><span class="label">Your full name</span><input type="text" id="acct-name" value="${esc(ME.name)}" maxlength="60" autocomplete="name"></label><button class="btn y" type="submit">Save name</button></form>
   ${!ME.admin&&G.contactsReady?`<form data-acctcontact style="display:flex;flex-direction:column;gap:10px"><label class="field"><span class="label">Phone number</span><input type="text" inputmode="tel" id="acct-phone" value="${esc((G.contacts[ME.id]||{}).phone||"")}" autocomplete="tel"></label>
    <label class="field"><span class="label">Email (optional)</span><input type="text" inputmode="email" id="acct-email" value="${esc((G.contacts[ME.id]||{}).email||"")}" autocomplete="email"></label>
    <p class="who" style="margin:0">Only the host can see these.</p><button class="btn y" type="submit">Save contact info</button></form>`:""}
@@ -699,6 +744,16 @@ function attendanceBox(k){if(!G.attReady)return `<div class="box"><p>Attendance 
      <button class="pill att ${v===false?"off":""}" data-att="${p.uid}" data-k="${k}" data-v="0" aria-pressed="${v===false}">No-show</button></li>`}).join("")}</ul>`:`<p class="who">No one has joined yet.</p>`}
   </div>`}
 function attendanceSummary(uid){let came=0,ns=0;Object.values(G.att).forEach(m=>{if(m[uid]===true)came++;else if(m[uid]===false)ns++});return {came,ns}}
+function dupesOf(m){const p=(G.contacts[m.id]||{}).phone;const pd=p?digits(p).slice(-10):"";const nm=m.name.trim().toLowerCase();
+  return G.members.filter(o=>o.id!==m.id&&o.id!==ME.id&&((pd&&digits((G.contacts[o.id]||{}).phone).slice(-10)===pd)||o.name.trim().toLowerCase()===nm))}
+function freezeSecrets(){const c=curKey();months().filter(k=>k.slice(0,7)===c&&S.plan[k]).forEach(k=>{if(!secretsOf(k).length)return;O2(S,"details");const d=S.details[k]=det(k);const o={...(d.secretOverrides||{})};
+  G.members.forEach(m=>{if(!o[m.id])o[m.id]=secretOf(k,m.id)});d.secretOverrides=o});save()}
+async function removeMember(id){const m=G.members.find(x=>x.id===id);freezeSecrets();await flushSaves().catch(()=>{});
+  const {error}=await sb.rpc("remove_member",{p_id:id});if(error){console.error(error);toast(/function|schema/i.test(error.message||"")?"Run the latest SQL update in Supabase first.":"Couldn't remove. Check your connection.");return}
+  toast(`Removed ${m?m.name:"member"}`);refresh()}
+async function mergeMember(from,into){const a=G.members.find(x=>x.id===from),b=G.members.find(x=>x.id===into);freezeSecrets();await flushSaves().catch(()=>{});
+  const {error}=await sb.rpc("merge_members",{p_from:from,p_into:into});if(error){console.error(error);toast(/function|schema/i.test(error.message||"")?"Run the latest SQL update in Supabase first.":"Couldn't combine. Check your connection.");return}
+  toast(`Combined into ${b?b.name:"one"}`);refresh()}
 function membersLog(){if(!G.contactsReady)return `<div class="box"><p>Contact info isn't set up yet. Run the contacts SQL in Supabase, then reload.</p></div>`;
   const L=G.members.slice().sort((a,b)=>a.name.localeCompare(b.name));const withPhone=L.filter(m=>G.contacts[m.id]).length;const missing=L.filter(m=>!G.contacts[m.id]&&m.id!==ME.id).length;
   const rsvpsFor=m=>Object.entries(G.rsvps).filter(([k,rs])=>rs.some(r=>(r.uid?r.uid===m.id:r.name===m.name)&&r.status==="going")).map(([k])=>k).sort();
@@ -709,7 +764,31 @@ function membersLog(){if(!G.contactsReady)return `<div class="box"><p>Contact in
        <div class="row" style="flex-wrap:wrap"><a class="pill" href="sms:${digits(c.phone)}">Text</a><a class="pill" href="tel:${digits(c.phone)}">Call</a>${c.email?`<a class="pill" href="mailto:${esc(c.email)}">Email</a>`:""}</div>`
       :`<p class="who">${m.id===ME.id?"Hosts aren't asked for a phone number.":"No phone yet. They'll be asked the next time they open the app."}</p>`}
      ${going.length?`<p class="who" style="margin:0">RSVPed going to: ${going.map(k=>esc(byId[S.plan[k]]?byId[S.plan[k]].name:monShort(k))).join(", ")}</p>`:""}
-     ${(()=>{const a=attendanceSummary(m.id);return a.came||a.ns?`<p class="who" style="margin:0"><b style="color:var(--ink)">Came ${a.came} time${a.came===1?"":"s"}</b>${a.ns?` · No-show ${a.ns}`:""}</p>`:""})()}</div>`}).join(""):`<p class="who">Nobody has joined yet.</p>`}</div>`}
+     ${(()=>{const a=attendanceSummary(m.id);return a.came||a.ns?`<p class="who" style="margin:0"><b style="color:var(--ink)">Came ${a.came} time${a.came===1?"":"s"}</b>${a.ns?` · No-show ${a.ns}`:""}</p>`:""})()}
+     ${m.id===ME.id?"":dupesOf(m).map(o=>`<div class="dupe">Looks like a duplicate of ${esc(o.name)} (joined ${shortDate(o.created_at)}). <button class="x" data-mmerge="${m.id}" data-into="${o.id}">Combine into that one</button></div>`).join("")}
+     ${m.id===ME.id?"":`<div class="mtools"><button class="x" data-mrm="${m.id}">Remove member</button></div>`}</div>`}).join(""):`<p class="who">Nobody has joined yet.</p>`}</div>`}
+let actRange=7;
+function activityLog(){if(!G.v3)return `<div class="box"><p>Activity tracking isn't set up yet. Run update3.sql in Supabase, then reload.</p></div>`;
+  const cut=Date.now()-actRange*864e5;const V=G.views.filter(v=>new Date(v.created_at)>=cut);
+  const people={};V.forEach(v=>{const p=people[v.user_id]=people[v.user_id]||{name:v.name,n:0,last:v.created_at,days:new Set()};p.n++;p.days.add(v.created_at.slice(0,10));if(v.created_at>p.last)p.last=v.created_at});
+  const pages={};V.forEach(v=>{const key=v.page.split(" · ").slice(0,v.page.startsWith("Collective")||v.page.startsWith("Up next")?2:1).join(" · ").replace(/^Up next · .*/,"Up next");const pg=v.page.startsWith("Up next")?"Up next · "+(v.page.split(" · ")[2]||"Plan"):key;pages[pg]=(pages[pg]||0)+1});
+  const topPages=Object.entries(pages).sort((a,b)=>b[1]-a[1]).slice(0,12);const max=topPages.length?topPages[0][1]:1;
+  const ppl=Object.values(people).sort((a,b)=>b.last.localeCompare(a.last));
+  const quiet=G.members.filter(m=>m.id!==ME.id&&!people[m.id]);
+  const S7=G.shares.filter(x=>new Date(x.created_at)>=cut);const sharers={};S7.forEach(x=>{(sharers[x.name]=sharers[x.name]||[]).push(x.method)});
+  const allSharers={};G.shares.forEach(x=>allSharers[x.name]=(allSharers[x.name]||0)+1);
+  const votes={};G.votes.forEach(v=>(votes[v.theme_id]=votes[v.theme_id]||[]).push(v.name));const topV=Object.entries(votes).sort((a,b)=>b[1].length-a[1].length);
+  return `<div class="seg mini" style="margin-bottom:2px">${[[1,"Today"],[7,"7 days"],[30,"30 days"]].map(([v,l])=>`<button data-actrange="${v}" aria-pressed="${actRange===v}">${l}</button>`).join("")}</div>
+   <div class="statrow"><div class="box tint"><span class="big">${ppl.length}</span><span class="who">people opened the app</span></div><div class="box tint"><span class="big">${V.length}</span><span class="who">page visits</span></div><div class="box tint"><span class="big">${S7.length}</span><span class="who">flyer shares</span></div></div>
+   <div class="box"><div class="h2">Flyer shares</div>
+    ${Object.keys(sharers).length?Object.entries(sharers).sort((a,b)=>b[1].length-a[1].length).map(([n,ms])=>`<div class="arow"><b>${esc(n)}</b><span class="who">${ms.length} · ${[...new Set(ms)].map(esc).join(", ")}</span></div>`).join(""):`<p class="who">Nobody has shared the flyer in this time.</p>`}
+    ${G.shares.length?`<p class="who" style="margin:4px 0 0">All time: ${G.shares.length} shares by ${Object.keys(allSharers).length} ${Object.keys(allSharers).length===1?"person":"people"}${(S.interested||[]).length?` · ${(S.interested||[]).length} people said they're interested`:""}</p>`:""}</div>
+   <div class="box"><div class="h2">Most visited</div>${topPages.length?topPages.map(([pg,n])=>`<div class="bar"><span>${esc(pg)}</span><span class="track"><span style="width:${Math.max(4,n/max*100)}%"></span></span><b>${n}</b></div>`).join(""):`<p class="who">No visits yet in this time.</p>`}</div>
+   <div class="box"><div class="h2">Who's been in the app</div>${ppl.length?ppl.map(p=>`<div class="arow"><b>${esc(p.name)}</b><span class="who">${p.n} visits · ${p.days.size} day${p.days.size===1?"":"s"} · last ${ago(p.last)}</span></div>`).join(""):`<p class="who">Nobody yet in this time.</p>`}
+    ${quiet.length?`<p class="who" style="margin:6px 0 0"><b style="color:var(--ink)">Haven't opened it in this time:</b> ${quiet.map(m=>esc(m.name)).join(", ")}</p>`:""}</div>
+   <div class="box"><div class="h2">Theme votes</div>${topV.length?topV.slice(0,10).map(([id,ns])=>`<div class="arow"><b>${esc(byId[id]?byId[id].name:id)} · ${ns.length}</b><span class="who">${ns.map(esc).join(", ")}</span></div>`).join(""):`<p class="who">No votes yet.</p>`}</div>
+   <p class="who">Visits are counted from the last 30 days and only show page names, not what people type. Your own visits as host aren't counted.</p>
+   ${G.views.length?`<button class="x" data-clearviews>Clear visit history</button>`:""}`}
 function feedbackLog(){if(!G.feedbackReady)return `<div class="box"><p>Feedback isn't set up yet. Run the feedback SQL in Supabase, then reload.</p></div>`;
   const L=G.feedback;const open=L.filter(f=>!f.resolved),done=L.filter(f=>f.resolved);
   const card=f=>`<div class="entry"><div class="by"><span><b style="color:var(--ink)">${esc(f.name)}</b> · ${ago(f.created_at)}</span>${f.resolved?`<span class="kind" style="background:var(--green)">Handled</span>`:""}</div>
@@ -757,6 +836,8 @@ const I={
  coll:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
  themes:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6-5.3-3-5.3 3 1.2-6L3.4 9.3l6-.7z"/></svg>',
+ next:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+ me:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg>',
  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
  search:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg>',
  reset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/></svg>',
@@ -778,12 +859,13 @@ function home(){
   return `<div class="top"><div><div class="brand">Bible Brunch<span class="dot">.</span></div><div class="sub">One table. One theme. Every month.</div><div class="sync" id="sync"></div></div>
    </div>
   <div class="pad">
-   ${ks.length?`<div class="cards">${ks.map((k,i)=>{const t=byId[S.plan[k]];const r=S.rsvp[k]||"";return `<div class="tw">${tile(t,{key:k,badge:k.slice(0,7)===c?"This month":"",tag:"button",attrs:`data-open="${k}" aria-label="${esc(t.name)}, ${monName(k)}"`})}
+   ${ks.length?`<div class="cards">${ks.map((k,i)=>{const t=byId[S.plan[k]];const r=S.rsvp[k]||"";return `<div class="tw">${tile(t,{key:k,badge:k===featured()?"Up next":"",tag:"button",attrs:`data-open="${k}" aria-label="${esc(t.name)}, ${monName(k)}"`})}
      <div class="seg mini" role="group" aria-label="RSVP for ${esc(t.name)}">${[["going","Going"],["maybe","Maybe"],["no","Can't"]].map(([v,l])=>`<button data-rsvp="${v}" data-key="${k}" aria-pressed="${r===v}" aria-label="${v==="no"?"Can't come":l}">${l}</button>`).join("")}</div></div>`}).join("")}</div>
+   <button class="box upnext" data-tab="next"><span class="grow"><span class="label">Up next</span><b class="h2" style="font-size:20px">${esc(byId[S.plan[featured()]]?byId[S.plan[featured()]].name:"")}</b><span class="who">${S.plan[featured()]?gDate(featured()):""} · Prep, sign-ups, workbook & challenges</span></span><span style="font-weight:900;font-size:26px">›</span></button>
    ${feedbackBox()}
    ${homeStrip(curGathering())}
    <button class="btn block" data-openinvite style="font-size:17px;padding:14px">Invite a friend to Bible Brunch</button>
-   <p class="hint">Tap this month's card for prep, sign-ups, the day-of workbook, and challenges. The next three show the plan.</p>`
+   <p class="hint">Tap any card to see its plan. Prep, sign-ups, the day-of workbook, and challenges are on the <button class="x" data-tab="next">Up next</button> tab.</p>`
    :`<div class="empty">Nothing planned yet. Open Plan to pick themes.</div>`}
   </div>`;
 }
@@ -820,7 +902,7 @@ function prep(t,k){
    <div class="box"><div class="bhead"><div class="h2">${allBringOf(k,t)?"Just need one":"Food sign-up"}</div><button class="editpill" data-ed="bring" data-k="${k}">Edit</button></div><p class="sub">${allBringOf(k,t)?"One person brings each of these. ":""}${Object.keys(claims).length} of ${items.length} claimed</p>
     <ul class="list">${items.map(it=>{const who=claims[it];const mine=who==="You";
       return `<li><div class="grow">${esc(it)}<div class="who">${who?(mine?"You're bringing this":esc(who)+" is bringing this"):"Still needed"}</div></div>
-      <button class="pill ${mine?"on":who?"taken":""}" data-claim="${esc(it)}" data-key="${k}" ${who&&!mine?"disabled":""}>${mine?"Claimed ✓":who?"Taken":"I'll bring it"}</button></li>`}).join("")}</ul>
+      ${ME.admin&&who&&!mine&&!bringOf(k,t).includes(it)?`<button class="x" data-unclaim="${esc(it)}" data-key="${k}">Remove</button>`:`<button class="pill ${mine?"on":who?"taken":""}" data-claim="${esc(it)}" data-key="${k}" ${who&&!mine?"disabled":""}>${mine?"Claimed ✓":who?"Taken":"I'll bring it"}</button>`}</li>`}).join("")}</ul>
     <form class="row" data-addfood="${k}"><input type="text" id="addfood-${k}" placeholder="Bringing something else? Add it" aria-label="Add something you'll bring"><button class="btn y" type="submit">I'll bring it</button></form>
    </div>`;
 }
@@ -885,7 +967,7 @@ function workbook(t,k){
   const w=O2(S.wb,k);const done=w.done||{};const d=eventDate(k,t);const isDay=+today()===+d;const before=today()<d;
   const steps=stepsOf(k);const n=steps.filter(st=>done[st.id]).length;
   return `
-   ${ME.admin?`<button class="btn y block" data-wbedit="${k}">Edit this workbook</button>`:""}
+   ${ME.admin?`<div class="two"><button class="btn y" data-wbedit="${k}">Edit this workbook</button><button class="btn w" data-editflow="${k}">Edit itinerary</button></div>`:""}
    <div class="box"><div style="display:flex;justify-content:space-between;align-items:baseline"><div class="h2">Day-of workbook</div><b>${n}/${steps.length}</b></div>
     <div class="progress"><span style="width:${steps.length?n/steps.length*100:0}%"></span></div>
     ${before?`<div class="note">Opens ${fmtLong(d)}. You're looking at a preview.</div>`:isDay?`<div class="note">It's gathering day. Work through it together.</div>`:""}</div>
@@ -1011,34 +1093,110 @@ function challenges(k){
 }
 
 function detail(){
-  const t=byId[detailId];const k=detailKey;const live=k&&k.slice(0,7)===curKey();const isCur=live||(ME.admin&&k&&S.plan[k]===t.id);
+  return gatheringView(detailKey,detailId,false)}
+function upcomingKeys(){const t0=today();return months().filter(k=>S.plan[k]&&eventDate(k,byId[S.plan[k]])>=t0)}
+let nextPick=null;
+function nextKeyNow(){const up=upcomingKeys();if(nextPick&&up.slice(0,3).includes(nextPick))return nextPick;return featured()}
+function upNext(){const k=nextKeyNow();const id=S.plan[k];if(!id)return `<div class="top"><div><div class="brand">Up next<span class="dot">.</span></div></div></div><div class="pad"><div class="empty">Nothing planned yet.</div></div>`;
+  const up=upcomingKeys().slice(0,3);
+  return `<div class="top"><div><div class="brand">Up next<span class="dot">.</span></div><div class="sub">Plan, prep, the day-of workbook, and challenges</div></div></div>
+   ${up.length>1?`<div class="pad" style="padding-bottom:0"><div class="chips">${up.map(x=>`<button class="chip" data-nextpick="${x}" aria-pressed="${x===k}">${esc(byId[S.plan[x]].name.split(/ [&+] /)[0])} · ${fmtMon(eventDate(x,byId[S.plan[x]]))} ${eventDate(x,byId[S.plan[x]]).getDate()}</button>`).join("")}</div></div>`:""}
+   ${gatheringView(k,id,true)}`}
+function gatheringView(k,id,inTab){
+  const t=byId[id];const live=k&&(k.slice(0,7)===curKey()||k===featured()||(inTab&&upcomingKeys().slice(0,3).includes(k)));const isCur=live||(ME.admin&&k&&S.plan[k]===t.id);
   let body;
   if(isCur){body=`<div class="seg" role="tablist">${[["itin","Plan"],["prep","Prep"],["day","Day of"],["chal","Challenges"]].map(([v,l])=>`<button data-dtab="${v}" aria-pressed="${dtab===v}">${l}</button>`).join("")}</div>`}
-  const inner=!isCur?itinerary(t,k)+`<div class="note">${k?`Prep, food sign-ups, and the workbook open in ${monShort(k)}.`:"Add this theme to a month on the Plan tab to schedule it."}</div>`
+  const inner=!isCur?itinerary(t,k)+`<div class="note">${k?`Prep, food sign-ups, and the workbook open when this is up next.`:"Add this theme to a month on the Plan tab to schedule it."}</div>`
     :dtab==="prep"?prep(t,k):dtab==="day"?workbook(t,k):dtab==="chal"?challenges(k):itinerary(t,k);
-  return `<div class="scroll" id="dscroll"><div class="dtop"><button class="iconbtn" data-close aria-label="Back">${I.back}</button>${tile(t,{key:k,badge:live?"This month":""})}</div>
+  const badge=live?(k===featured()?"Up next":"Coming up"):"";
+  const head=inTab?`<div class="dtop">${tile(t,{key:k,badge})}</div>`:`<div class="dtop"><button class="iconbtn" data-close aria-label="Back">${I.back}</button>${tile(t,{key:k,badge})}</div>`;
+  const content=`${head}
    ${isCur?`<div class="dtabs">${body}</div>`:""}
-   <div class="pad" style="padding-top:${isCur?6:12}px">${isCur&&!live?`<div class="note">Host view. The group sees Prep, Day of, and Challenges for this gathering once ${monShort(k)} arrives.</div>`:""}<p style="margin:0;font-weight:800;font-size:17px">${esc(t.tag)}</p>${inner}</div></div>`;
+   <div class="pad" style="padding-top:${isCur?6:12}px">${isCur&&!live?`<div class="note">Host view. The group sees Prep, Day of, and Challenges for this gathering once it's up next.</div>`:""}<p style="margin:0;font-weight:800;font-size:17px">${esc(t.tag)}</p>${inner}</div>`;
+  return inTab?`<div class="intab">${content}</div>`:`<div class="scroll" id="dscroll">${content}</div>`;
 }
 
+/* ---------- My Brunch (personal page) ---------- */
+function myBrunch(){
+  const all=months().filter(k=>S.plan[k]);const up=upcomingKeys();const t0=today();
+  const rs=all.filter(k=>S.rsvp[k]);const upR=rs.filter(k=>up.includes(k)),pastR=rs.filter(k=>!up.includes(k)).reverse();
+  const stat={going:"Going",maybe:"Maybe",no:"Can't come"};
+  const row=k=>{const t=byId[S.plan[k]];return `<li><button class="info" data-open="${k}"><b>${esc(t.name)}</b><small>${gDate(k)} · ${esc(timeOf(k,t))}</small></button><span class="kind st-${S.rsvp[k]}">${stat[S.rsvp[k]]}</span></li>`};
+  const bring=up.slice(0,3).map(k=>{const t=byId[S.plan[k]];const items=Object.entries(S.claims[k]||{}).filter(([i,w])=>w==="You").map(([i])=>i);const a=(G.all[k]||[]).find(x=>x.mine);const ab=allBringOf(k,t);
+    if(!items.length&&!a&&!ab)return "";
+    return `<li><button class="info" data-open="${k}" data-goto="prep"><b>${esc(t.name)} · ${gDate(k)}</b><small>${a?`${esc(ab?ab.item:"Everyone brings")}: <b>${esc(a.what)}</b>`:ab?`Everyone brings ${esc(ab.item.toLowerCase())}. Tap to say what kind.`:""}${items.length?`${a||ab?"<br>":""}Signed up for: <b>${items.map(esc).join(", ")}</b>`:""}</small></button></li>`}).filter(Boolean);
+  const ck=curGathering();const ct=byId[S.plan[ck]];const defs=ct?chalDefs(ck):[];const tk=(S.commits[ck]||{}).taken||{};const mineC=defs.filter(c=>tk[c.id]);const pts=ct?points(ck):0;
+  const prays=S.prayers.filter(p=>p.me);
+  const mj=S.journal.filter(j=>j.mine).slice().reverse();const priv=mj.filter(j=>!j.shared),shr=mj.filter(j=>j.shared);
+  const jlist=(L,id,label)=>`<details class="jsub" data-g="${id}" ${CLOSEDG.has(id)?"":"open"}><summary>${label} <span class="kind">${L.length}</span><span class="chev">›</span></summary>${L.length?L.map(j=>`<div class="entry"><div class="by"><span>${S.plan[j.key]?esc(byId[S.plan[j.key]].name):""}</span><span class="row"><span class="kind ${j.shared?"":"private"}">${j.shared?"Shared":"Only you"}</span></span></div><p>${esc(j.text)}</p><div class="erow">${j.shared?heartBtn("journal",j.id):"<span></span>"}${entryTools("journal",j)}</div></div>`).join(""):`<p class="who">Nothing here yet.</p>`}</details>`;
+  return `<div class="top"><div><div class="brand">My Brunch<span class="dot">.</span></div><div class="sub">Hi, ${esc((ME.name||"friend").split(" ")[0])}! Everything that's yours, in one place.</div></div><button class="iconbtn" data-account aria-label="Account" style="width:auto;padding:0 12px;font-weight:900;font-size:13px">Account</button></div>
+  <div class="pad">
+   <div class="box"><div class="h2">My RSVPs</div>${upR.length?`<ul class="list mine">${upR.map(row).join("")}</ul>`:`<p class="who">You haven't RSVPed to anything coming up. Tap Going, Maybe, or Can't under a card on Home.</p>`}
+    ${pastR.length?`<details class="jsub" data-g="me-past"><summary>Past gatherings <span class="kind">${pastR.length}</span><span class="chev">›</span></summary><ul class="list mine">${pastR.map(row).join("")}</ul></details>`:""}</div>
+   <div class="box"><div class="h2">What I'm bringing</div>${bring.length?`<ul class="list mine">${bring.join("")}</ul>`:`<p class="who">You haven't signed up to bring anything yet. Find the food sign-up on the Prep tab of Up next.</p>`}</div>
+   ${ct?`<button class="box strip" data-tab="next" data-gochal><span class="big">${pts}<small>/${GOAL}</small></span><span class="grow"><b class="h2" style="font-size:20px">My challenges</b>
+     <span class="who">${mineC.length?mineC.map(c=>esc(c.text)).join(" · "):"You haven't picked any challenges yet."}</span></span><span style="font-weight:900;font-size:22px">›</span></button>`:""}
+   <div class="box"><div class="h2">People I'm praying for</div>${prays.length?prays.map(p=>`<div class="entry"><div class="by"><span><b style="color:var(--ink)">${esc(p.who)}</b> · ${esc(p.when)}</span>${p.ans?`<span class="kind" style="background:var(--green)">Answered</span>`:""}</div><p>${esc(p.text)}</p>
+     <button class="pray" data-pray="${p.id}" aria-pressed="true">Praying · ${p.n}</button></div>`).join(""):`<p class="who">When you tap “I'll pray” on a request in Collective → Prayer, it shows up here.</p>`}</div>
+   <div class="box"><div class="h2">My journal</div>
+    <div class="col"><textarea id="mj-text" placeholder="Write a prayer, a verse that stuck, or what God is teaching you…" maxlength="5000"></textarea>
+     <label class="fbchip" style="align-self:flex-start"><input type="checkbox" id="mj-share"><span>Share with the group</span></label>
+     <button class="btn" data-mynew>Save entry</button></div>
+    ${jlist(priv,"me-priv","Private entries")}${jlist(shr,"me-shared","Shared with the group")}</div>
+  </div>`}
+
+/* ---------- hearts, votes, tracking ---------- */
+function heartBtn(kind,target){if(!G.v3||!target)return "";const L=(G.hearts||[]).filter(h=>h.kind===kind&&h.target===String(target));const mine=L.some(h=>h.user_id===ME.id);
+  return `<button class="heart" data-heart="${kind}" data-target="${esc(String(target))}" aria-pressed="${mine}" aria-label="${mine?"Remove heart":"Heart this"}" title="${esc(L.map(h=>h.user_id===ME.id?"You":h.name).join(", "))}">${mine?"♥":"♡"}${L.length?` <span>${L.length}</span>`:""}</button>`}
+function toggleHeart(kind,target){const i=G.hearts.findIndex(h=>h.kind===kind&&h.target===target&&h.user_id===ME.id);
+  if(i>=0){G.hearts.splice(i,1);render();sb.from("hearts").delete().eq("kind",kind).eq("target",target).eq("user_id",ME.id).then(({error})=>{if(error)refresh()})}
+  else{G.hearts.push({kind,target,user_id:ME.id,name:ME.name});render();sb.from("hearts").insert({kind,target,user_id:ME.id,name:ME.name}).then(({error})=>{if(error&&error.code!=="23505"){toast("Couldn't save. Check your connection.");refresh()}})}}
+const votesFor=id=>(G.votes||[]).filter(v=>v.theme_id===id);
+function voteBtn(id){if(!G.v3)return "";const L=votesFor(id);const mine=L.some(v=>v.user_id===ME.id);
+  return `<button class="vote" data-vote="${id}" aria-pressed="${mine}">${mine?"♥ Voted":"♡ Vote"}<span>${L.length||""}</span></button>`}
+function toggleVote(id){const i=G.votes.findIndex(v=>v.theme_id===id&&v.user_id===ME.id);
+  if(i>=0){G.votes.splice(i,1);render();sb.from("theme_votes").delete().eq("theme_id",id).eq("user_id",ME.id).then(({error})=>{if(error)refresh()})}
+  else{G.votes.push({theme_id:id,user_id:ME.id,name:ME.name});render();sb.from("theme_votes").insert({theme_id:id,user_id:ME.id,name:ME.name}).then(({error})=>{if(error&&error.code!=="23505"){toast("Couldn't save. Check your connection.");refresh()}})}}
+let lastView="";const OPENG=new Set(),CLOSEDG=new Set();
+document.addEventListener("toggle",e=>{const d=e.target;if(!d.dataset||!d.dataset.g)return;const id=d.dataset.g;if(d.open){OPENG.add(id);CLOSEDG.delete(id)}else{CLOSEDG.add(id);OPENG.delete(id)}},true);
+function gDate(k){const t=byId[S.plan[k]];const d=eventDate(k,t);return `${d.toLocaleDateString("en-US",{weekday:"short"})}, ${fmtMon(d)} ${d.getDate()}`}
+function track(pg){if(!sb||!ME.id||ME.admin||!G.v3||!pg||pg===lastView)return;lastView=pg;sb.from("page_views").insert({user_id:ME.id,name:ME.name||"Someone",page:pg.slice(0,80)}).then(()=>{},()=>{})}
+function logShare(method){if(!sb||!ME.id)return;const row={user_id:ME.id,name:ME.name||"Someone",method};if(ME.admin)G.shares.unshift({...row,created_at:new Date().toISOString()});
+  sb.from("share_log").insert(row).then(()=>{},()=>{})}
+function pageName(){if(page)return page==="invite"?"Invite a friend":page==="landing"?"Invite page":"";
+  if(detailId){const t=byId[detailId];return `${t?t.name:"Gathering"} · ${{itin:"Plan",prep:"Prep",day:"Day of",chal:"Challenges"}[dtab]||""}`}
+  if(tab==="next"){const k=nextKeyNow();const t=byId[S.plan[k]];return `Up next · ${t?t.name:""} · ${{itin:"Plan",prep:"Prep",day:"Day of",chal:"Challenges"}[dtab]||""}`}
+  return {home:"Home",collective:"Collective · "+ctab,plan:"Plan",themes:"Themes",me:"My Brunch"}[tab]||tab}
+
 /* ---------- collective ---------- */
+function entryTools(tbl,e){if(!e.id||!(e.mine||ME.admin))return "";return `<div class="etools"><button class="x" data-eedit="${e.id}" data-tbl="${tbl}">Edit</button><button class="x" data-edel="${e.id}" data-tbl="${tbl}">Delete</button></div>`}
+function entryEditSheet(tbl,id){const L=tbl==="journal"?S.journal:S.gnotes;const e=L.find(x=>x.id===id);if(!e)return;
+  sheet(`<div class="h2">Edit ${tbl==="journal"?"journal entry":"group note"}</div><p class="sub">${e.mine?"Your entry":"By "+esc(e.who)}${e.q?` · On: ${esc(e.q)}`:""}</p>
+   <form data-eform="${id}" data-tbl="${tbl}" class="col"><textarea id="e-text" style="min-height:160px" maxlength="${tbl==="journal"?5000:1000}">${esc(e.text)}</textarea><button class="btn block" type="submit">Save</button></form>`)}
 function collective(){
   const c=curKey();const past=months().filter(k=>k.slice(0,7)<=c&&S.plan[k]);
   let body="";
   if(ctab==="Photos"){
     body=`<div class="pgrid">${past.slice().reverse().map(k=>{const t=byId[S.plan[k]];const p=S.photos[k];
-      return `<div class="pcell">${p?`<img src="${p}" alt="Group photo, ${monName(k)}">`:tile(t)}<span>${monName(k)} ${p?"":(k.slice(0,7)<c?"· no photo":"· photo pending")}</span></div>`}).join("")}</div>
+      return `<div class="pcell">${p?`<img src="${p}" alt="Group photo, ${monName(k)}">`:tile(t)}<span>${monName(k)} ${p?"":(k.slice(0,7)<c?"· no photo":"· photo pending")}</span>${p?heartBtn("photo",k):""}</div>`}).join("")}</div>
      <label class="btn y block">Add ${monShort(c)}'s group photo<input type="file" accept="image/*" data-photo="${curGathering()}" hidden></label>`;
   } else if(ctab==="Journal"){
-    body=past.slice().reverse().map(k=>{const t=byId[S.plan[k]];const js=S.journal.filter(j=>j.key===k&&(j.shared||j.who==="You"));const ns=S.gnotes.filter(n=>n.key===k);
-      if(!js.length&&!ns.length) return `<div class="box"><div class="h2">${esc(t.name)}</div><p class="sub">${monName(k)} · Nothing yet. Journal entries and discussion notes from the workbook land here.</p></div>`;
-      return `<div class="box"><div class="h2">${esc(t.name)}</div><p class="sub">${monName(k)}</p>
-       ${js.map(j=>`<div class="entry"><div class="by"><span>${esc(j.who)}</span><span class="row"><span class="kind ${j.shared?"":"private"}">${j.shared?"Journal":"Only you"}</span>${j.sample?`<span class="sample">Sample</span>`:""}</span></div><p>${esc(j.text)}</p></div>`).join("")}
-       ${ns.map(n=>`<div class="entry"><div class="by"><span>On: ${esc(n.q)}</span><span class="row"><span class="kind note">Group note</span>${n.sample?`<span class="sample">Sample</span>`:""}</span></div><p>${esc(n.text)}</p></div>`).join("")}</div>`}).join("");
+    const rev=past.slice().reverse();
+    body=`<p class="who" style="margin:0 2px">Tap a gathering to open or close it. Your private entries are on the <button class="x" data-tab="me">My Brunch</button> page.</p>`+rev.map((k,gi)=>{const t=byId[S.plan[k]];const js=S.journal.filter(j=>j.key===k&&j.shared);const ns=S.gnotes.filter(n=>n.key===k);
+      const isOpen=id=>OPENG.has(id)?true:CLOSEDG.has(id)?false:gi===0;
+      if(!js.length&&!ns.length) return `<div class="box jg-empty"><div class="h2" style="font-size:19px">${esc(t.name)}</div><p class="sub">${monName(k)} · Nothing yet. Journal entries and discussion notes from the workbook land here.</p></div>`;
+      return `<details class="box jg" data-g="g-${k}" ${isOpen("g-"+k)?"open":""}><summary><span class="grow"><span class="h2" style="font-size:19px">${esc(t.name)}</span><span class="who">${gDate(k)} · ${js.length} journal · ${ns.length} notes</span></span><span class="chev">›</span></summary>
+       ${js.length?`<details class="jsub" data-g="j-${k}" ${OPENG.has("j-"+k)||!CLOSEDG.has("j-"+k)?"open":""}><summary>Journal entries <span class="kind">${js.length}</span><span class="chev">›</span></summary>
+       ${js.map(j=>`<div class="entry"><div class="by"><span>${esc(j.who)}</span><span class="row"><span class="kind">Journal</span></span></div><p>${esc(j.text)}</p><div class="erow">${heartBtn("journal",j.id)}${entryTools("journal",j)}</div></div>`).join("")}</details>`:""}
+       ${ns.length?`<details class="jsub" data-g="n-${k}" ${OPENG.has("n-"+k)||!CLOSEDG.has("n-"+k)?"open":""}><summary>Group notes <span class="kind note">${ns.length}</span><span class="chev">›</span></summary>
+       ${ns.map(n=>`<div class="entry"><div class="by"><span>On: ${esc(n.q)}</span><span class="row"><span class="kind note">Group note</span></span></div><p>${esc(n.text)}</p>${n.who!=="You"?`<p class="who" style="margin:0">${esc(n.who)}</p>`:""}<div class="erow">${heartBtn("note",n.id)}${entryTools("notes",n)}</div></div>`).join("")}</details>`:""}
+      </details>`}).join("");
   } else if(ctab==="Challenges"){
     body=challenges(curGathering());
   } else if(ctab==="Members"){
     body=membersLog();
+  } else if(ctab==="Activity"){
+    body=activityLog();
   } else if(ctab==="Feedback"){
     body=feedbackLog();
   } else if(ctab==="Interested"){
@@ -1050,7 +1208,7 @@ function collective(){
       <button class="pray" data-pray="${p.id}" aria-pressed="${p.me}">${p.me?"Praying":"I'll pray"} · ${p.n}</button></div></div>`).join("")}</div>`;
   }
   return `<div class="top"><div><div class="brand">The Collective<span class="dot">.</span></div><div class="sub">Everything we've gathered, all in one place.</div></div></div>
-   <div class="pad"><div class="chips">${["Photos","Journal","Challenges","Prayer"].concat(ME.admin?["Members","Feedback","Interested"]:[]).map(x=>`<button class="chip" data-ctab="${x}" aria-pressed="${ctab===x}">${x}</button>`).join("")}</div>${body}</div>`;
+   <div class="pad"><div class="chips">${["Photos","Journal","Challenges","Prayer"].concat(ME.admin?["Members","Activity","Feedback","Interested"]:[]).map(x=>`<button class="chip" data-ctab="${x}" aria-pressed="${ctab===x}">${x}</button>`).join("")}</div>${body}</div>`;
 }
 
 /* ---------- plan + themes ---------- */
@@ -1063,12 +1221,17 @@ function plan(){
      <button class="pill" data-edit="${k}">Edit</button></div>`}).join("")}</div>
    <button class="btn y block" data-addmonth>Add another month</button></div>`;
 }
+let vsort="all";
 function themes(){
-  const list=T.filter(t=>(cat==="All"||t.cat===cat)&&(!q||(t.name+" "+t.tag+" "+t.read).toLowerCase().includes(q.toLowerCase())));
+  let list=T.filter(t=>(cat==="All"||t.cat===cat)&&(!q||(t.name+" "+t.tag+" "+t.read).toLowerCase().includes(q.toLowerCase())));
+  if(vsort==="top"&&G.v3)list=list.slice().sort((a,b)=>votesFor(b.id).length-votesFor(a.id).length);
+  if(vsort==="mine"&&G.v3)list=list.filter(t=>votesFor(t.id).some(v=>v.user_id===ME.id));
   return `<div class="top"><div><div class="brand">Themes<span class="dot">.</span></div><div class="sub">${T.length} gatherings to choose from</div></div></div>
   <div class="pad"><label class="search">${I.search}<input id="q" type="search" placeholder="Search themes or passages" value="${esc(q)}" aria-label="Search themes"></label>
    <div class="chips">${CATS.map(x=>`<button class="chip" data-cat="${x}" aria-pressed="${cat===x}">${x}</button>`).join("")}</div>
-   ${list.length?`<div class="tgrid">${list.map(t=>tile(t,{tag:"button",attrs:`data-theme="${t.id}" aria-label="${esc(t.name)}"`})).join("")}</div>`:`<div class="empty">No themes match “${esc(q)}”.</div>`}</div>`;
+   ${G.v3?`<div class="box tint votehead"><b>Vote for the themes you want next.</b><span class="who">Tap ♡ Vote under as many as you like. The host sees the totals when planning.</span>
+     <div class="seg mini">${[["all","All"],["top","Most votes"],["mine","My votes"]].map(([v,l])=>`<button data-vsort="${v}" aria-pressed="${vsort===v}">${l}</button>`).join("")}</div></div>`:""}
+   ${list.length?`<div class="tgrid">${list.map(t=>`<div class="tw">${tile(t,{tag:"button",attrs:`data-theme="${t.id}" aria-label="${esc(t.name)}"`})}${voteBtn(t.id)}</div>`).join("")}</div>`:`<div class="empty">${vsort==="mine"?"You haven't voted yet.":`No themes match “${esc(q)}”.`}</div>`}</div>`;
 }
 
 /* ---------- sheet ---------- */
@@ -1291,8 +1454,12 @@ function listDefault(){const L=LD,t=byId[S.plan[L.k]];
 /* ---------- render ---------- */
 function render(){setTimeout(paintSync,0);
   const main=document.getElementById("main");const st=main.scrollTop;
-  main.innerHTML={home,collective,plan,themes}[tab]();main.scrollTop=st;
-  document.getElementById("tabs").innerHTML=[["home","Home",I.home],["collective","Collective",I.coll],["plan","Plan",I.cal],["themes","Themes",I.themes]]
+  if(tab==="plan"&&!ME.admin)tab="home";
+  main.innerHTML={home,next:upNext,collective,plan,themes,me:myBrunch}[tab]();main.scrollTop=st;
+  const NAV=[["home","Home",I.home],["next","Up next",I.next],["collective","Collective",I.coll]].concat(ME.admin?[["plan","Plan",I.cal]]:[]).concat([["themes","Themes",I.themes],["me","Me",I.me]]);
+  document.getElementById("tabs").style.gridTemplateColumns=`repeat(${NAV.length},1fr)`;
+  setTimeout(()=>track(pageName()),0);
+  document.getElementById("tabs").innerHTML=NAV
    .map(([k,l,ic])=>`<button data-tab="${k}" ${tab===k?'aria-current="page"':""}>${ic}${l}</button>`).join("");
   const dt=document.getElementById("detail");
   if(page){const ds=document.getElementById("dscroll")?.scrollTop||0;dt.innerHTML=page==="invite"?inviteView():page==="wbedit"?wbEditView():page==="secrets"?secretsView():page==="welcome"?welcomeView():page==="setup"?setupView():landingView();dt.hidden=false;document.getElementById("dscroll").scrollTop=ds;
@@ -1303,12 +1470,13 @@ function render(){setTimeout(paintSync,0);
 }
 function openDetail(k,id,goto){detailKey=k;detailId=id;dtab=goto||"itin";render();document.getElementById("dscroll").scrollTop=0}
 
+document.addEventListener("click",e=>{const a=e.target.closest("a[id^=sh-]");if(a)logShare({"sh-sms":"Text","sh-wa":"WhatsApp","sh-fb":"Facebook","sh-x":"X"}[a.id]||a.id)});
 document.addEventListener("click",e=>{
   const b=e.target.closest("button,[data-scrim]");if(!b)return;const ds=b.dataset;
   if(ds.scrim!==undefined){if(e.target===b)closeSheet();return}
   if(!ME.admin&&(ds.edit||ds.ed||ds.editflow||ds.addmonth!==undefined||ds.pick||ds.removemonth||ds.setplan)){toast("Only the host can change the plan");return}
   if(ds.open&&!S.plan[ds.open]&&!ME.admin)return;
-  if(ds.tab){tab=ds.tab;detailId=null;render();document.getElementById("main").scrollTop=0}
+  if(ds.tab){tab=ds.tab;detailId=null;if(ds.gochal!==undefined){nextPick=curGathering();dtab="chal"}else if(ds.tab==="next"&&!b.closest(".tabs")){dtab="itin"}render();document.getElementById("main").scrollTop=0}
   else if(ds.open){if(S.plan[ds.open])openDetail(ds.open,S.plan[ds.open],ds.goto);else pickTheme(ds.open)}
   else if(ds.theme){const k=months().find(x=>S.plan[x]===ds.theme&&x.slice(0,7)>=curKey());openDetail(k||null,ds.theme)}
   else if(ds.close!==undefined){detailId=null;render()}
@@ -1316,8 +1484,8 @@ document.addEventListener("click",e=>{
   else if(ds.closepage!==undefined){if(page==="landing"&&landingPreview){page="invite";landingPreview=false}else{if(page==="secrets"&&secFrom==="wbedit"){page="wbedit";render();return}const back=page==="wbedit"?wbKey:page==="secrets"?secKey:null;page=null;if(back&&detailId)openDetail(back,S.plan[back],"day");else render()}}
   else if(ds.preview!==undefined){const v=inv();landingFrom={name:v.name,phone:(v.phone||"").replace(/\D/g,"").slice(-10)};landingPreview=true;landingStep="intro";page="landing";render();document.getElementById("dscroll").scrollTop=0}
   else if(ds.starter){const ta=document.getElementById("inv-note");ta.value=NOTE_STARTERS[ds.starter];ta.focus();inv().note=ta.value;save();refreshInvite()}
-  else if(ds.copy){if(ds.copy==="msg")copyText(inviteMsg(),"copybox");else if(ds.copy==="link")copyText(inviteLink(),"copybox");else copyText(document.getElementById("replybox").value,"replybox")}
-  else if(ds.saveimg!==undefined){saveCardImage()}
+  else if(ds.copy){if(ds.copy==="msg")logShare("Copied message");else if(ds.copy==="link")logShare("Copied link");if(ds.copy==="msg")copyText(inviteMsg(),"copybox");else if(ds.copy==="link")copyText(inviteLink(),"copybox");else copyText(document.getElementById("replybox").value,"replybox")}
+  else if(ds.saveimg!==undefined){logShare("Saved card image");saveCardImage()}
   else if(ds.att){if(!ME.admin)return;const k=ds.k,uid=ds.att,val=ds.v==="1";const M=G.att[k]=G.att[k]||{};const prev=M[uid];
     if(prev===val){delete M[uid];render();dbTry(sb.from("attendance").delete().eq("month",k).eq("user_id",uid)).catch(()=>refresh())}
     else{M[uid]=val;render();if(val)burst(e,k,12);dbTry(sb.from("attendance").upsert({month:k,user_id:uid,attended:val,marked_at:new Date().toISOString()})).catch(()=>refresh())}}
@@ -1326,6 +1494,11 @@ document.addEventListener("click",e=>{
   else if(ds.feedback!==undefined){if(!ME.id){toast("Join the group first");return}feedbackSheet(ds.feedback||"")}
   else if(ds.ctabGo){tab="collective";ctab=ds.ctabGo;detailId=null;page=null;render();document.getElementById("main").scrollTop=0}
   else if(ds.fbdone){const f=G.feedback.find(x=>x.id===ds.fbdone);f.resolved=true;render();dbTry(sb.from("feedback").update({resolved:true}).eq("id",f.id)).catch(()=>refresh())}
+  else if(ds.eedit){entryEditSheet(ds.tbl,ds.eedit)}
+  else if(ds.edel){if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to delete";return}const tbl=ds.tbl,id=ds.edel;
+    dbTry(sb.from(tbl).delete().eq("id",id)).then(()=>{if(tbl==="journal")S.journal=S.journal.filter(x=>x.id!==id);else S.gnotes=S.gnotes.filter(x=>x.id!==id);render();toast("Deleted")}).catch(()=>{})}
+  else if(ds.mrm){if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to remove";return}removeMember(ds.mrm)}
+  else if(ds.mmerge){if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to combine";return}mergeMember(ds.mmerge,ds.into)}
   else if(ds.fbdel){if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to remove";return}dbTry(sb.from("feedback").delete().eq("id",ds.fbdel)).then(()=>{G.feedback=G.feedback.filter(x=>x.id!==ds.fbdel);render();toast("Removed")}).catch(()=>{})}
   else if(ds.secopen){if(!ME.admin)return;secKey=ds.secopen;secFrom=null;page="secrets";render();document.getElementById("dscroll").scrollTop=0}
   else if(ds.seclist){edit("step",ds.seclist,5)}
@@ -1343,15 +1516,25 @@ document.addEventListener("click",e=>{
     let at=L.findIndex(x=>isBuiltin(x)&&order.indexOf(x.id)>want);L.splice(at<0?L.length:at,0,{id:ds.wbreadd});setSteps(wbKey,L);render();toast("Step added back")}
   else if(ds.wbreset!==undefined){if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to reset. Your custom steps will be removed.";return}const d=det(wbKey);delete d.steps;O2(S,"details");S.details[wbKey]=d;save();render();toast("Workbook reset")}
   else if(ds.wbpreview){page=null;openDetail(ds.wbpreview,S.plan[ds.wbpreview],"day")}
-  else if(ds.sharenative!==undefined){navigator.share({text:inviteMsg()}).catch(()=>{})}
+  else if(ds.sharenative!==undefined){navigator.share({text:inviteMsg()}).then(()=>logShare("Share menu")).catch(()=>{})}
   else if(ds.interested!==undefined){landingStep="form";render();setTimeout(()=>document.getElementById("int-name")?.focus(),0)}
   else if(ds.istatus){const x=S.interested[ds.istatus];const old=x.status;x.status=ds.s;render();sb.from("interested").update({status:ds.s}).eq("id",x.id).then(({error})=>{if(error){x.status=old;render();toast("Couldn't save. Check your connection.")}})}
   else if(ds.iremove){const x=S.interested[ds.iremove];if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to remove";return}dbTry(sb.from("interested").delete().eq("id",x.id)).then(()=>{S.interested=S.interested.filter(y=>y!==x);render();toast("Removed")}).catch(()=>{})}
-  else if(ds.dtab){const jump=!b.closest(".dtabs");dtab=ds.dtab;render();if(jump){const sc=document.getElementById("dscroll");sc.scrollTop=document.querySelector(".dtabs").offsetTop}}
+  else if(ds.dtab){const jump=!b.closest(".dtabs");dtab=ds.dtab;render();if(jump){const sc=detailId?document.getElementById("dscroll"):document.getElementById("main");const tb=(detailId?document.getElementById("detail"):document.getElementById("main")).querySelector(".dtabs");if(sc&&tb)sc.scrollTop=tb.offsetTop}}
+  else if(ds.gochal!==undefined){nextPick=curGathering();dtab="chal";render()}
+  else if(ds.nextpick){nextPick=ds.nextpick;render()}
+  else if(ds.heart){toggleHeart(ds.heart,ds.target)}
+  else if(ds.vote){toggleVote(ds.vote)}
+  else if(ds.actrange){actRange=Number(ds.actrange);render()}
+  else if(ds.vsort){vsort=ds.vsort;render()}
+  else if(ds.mynew!==undefined){const v=document.getElementById("mj-text").value.trim();if(!v){toast("Write something first");return}const shared=document.getElementById("mj-share").checked;const k=curGathering();
+    dbTry(sb.from("journal").insert({month:k,user_id:ME.id,name:ME.name,text:v.slice(0,5000),shared})).then(()=>{toast(shared?"Shared with the group":"Saved to your journal");refresh()}).catch(()=>{})}
+  else if(ds.clearviews!==undefined){if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to clear";return}dbTry(sb.from("page_views").delete().gte("created_at","2000-01-01")).then(()=>{G.views=[];render();toast("Cleared")}).catch(()=>{})}
   else if(ds.rsvp){const k=ds.key;const nv=S.rsvp[k]===ds.rsvp?"":ds.rsvp;
     const p=nv?sb.from("rsvps").upsert({month:k,user_id:ME.id,name:ME.name,status:nv}):sb.from("rsvps").delete().eq("month",k).eq("user_id",ME.id);
     S.rsvp[k]=nv;const L=(G.rsvps[k]=(G.rsvps[k]||[]).filter(r=>!r.mine));if(nv)L.push({uid:ME.id,name:ME.name,status:nv,mine:true});render();if(nv==="going"){toast("See you there!");burst(e,k)}
     dbTry(p).catch(()=>refresh())}
+  else if(ds.unclaim){const k=ds.key,it=ds.unclaim;if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again";return}const c=O2(S.claims,k);delete c[it];render();toast("Removed");dbTry(sb.from("claims").delete().eq("month",k).eq("item",it)).catch(()=>refresh())}
   else if(ds.claim){const k=ds.key,item=ds.claim;const c=O2(S.claims,k);
     if(c[item]==="You"){delete c[item];render();toast("Released");dbTry(sb.from("claims").delete().eq("month",k).eq("item",item)).catch(()=>refresh())}
     else if(!c[item]){c[item]="You";render();toast("Thanks for bringing it!");burst(e,k);
@@ -1462,28 +1645,34 @@ document.addEventListener("submit",e=>{e.preventDefault();const f=e.target,ds=f.
       S.gnotes.forEach(n=>{if(n.key===k)n.key=nk});S.journal.forEach(j=>{if(j.key===k)j.key=nk});if(S.details)delete S.details[k];if(detailKey===k)detailKey=nk}
     (S.details=S.details||{})[nk]=o;save();closeSheet();render();toast("Saved")}
   else if(ds.prayform!==undefined){const v=document.getElementById("pwall").value.trim();if(!v){toast("Write a request first");return}dbTry(sb.from("prayers").insert({user_id:ME.id,name:ME.name,text:v.slice(0,1000)})).then(()=>{toast("Posted");refresh()}).catch(()=>{})}
-  else if(ds.joinform!==undefined){const n=document.getElementById("j-name").value.trim().slice(0,60);if(!n){toast("Add your first name");return}
+  else if(ds.joinform!==undefined){const n=document.getElementById("j-name").value.trim().slice(0,60);if(!fullName(n)){toast("Add your first and last name");return}
     const ph=document.getElementById("j-phone").value.trim(),em=document.getElementById("j-email").value.trim();
     if(!validPhone(ph)){toast("Add your phone number, with area code");return}if(!validEmail(em)){toast("That email doesn't look right");return}
     const btn=f.querySelector("button[type=submit]");btn.disabled=true;
     (async()=>{try{if(!ME.id){const {error}=await sb.auth.signInAnonymously();if(error)throw error;await afterSignIn()}
       const {error:e2}=await sb.from("members").upsert({id:ME.id,name:n});if(e2)throw e2;ME.name=n;
+      let back=false;try{const r=await sb.rpc("reconnect_member",{p_name:n,p_phone:ph});back=!!(r&&r.data)}catch(e4){}
       try{await saveContact(ph,em)}catch(e3){console.error(e3)}
-      page=null;await loadAll();render();toast(`Welcome, ${n}!`)}
+      page=null;await loadAll();render();toast(back?`Welcome back, ${n.split(" ")[0]}! Your RSVPs and entries are here.`:`Welcome, ${n.split(" ")[0]}!`)}
      catch(err){console.error(err);btn.disabled=false;toast("Couldn't join. Check your connection and try again.")}})()}
   else if(ds.hostform!==undefined){const em=document.getElementById("h-email").value.trim(),pw=document.getElementById("h-pass").value,nm=document.getElementById("h-name").value.trim().slice(0,60);const btn=f.querySelector("button[type=submit]");btn.disabled=true;
     (async()=>{try{const {error}=await sb.auth.signInWithPassword({email:em,password:pw});if(error)throw error;await afterSignIn();
       if(nm||!ME.name){const name=nm||ME.name||"Host";await sb.from("members").upsert({id:ME.id,name});ME.name=name}
       page=null;await loadAll();render();toast(ME.admin?"Signed in as host":"Signed in")}
      catch(err){console.error(err);btn.disabled=false;toast("That email and password didn't work.")}})()}
+  else if(ds.eform){const tbl=ds.tbl,id=ds.eform;const v=document.getElementById("e-text").value.trim();if(!v){toast("Write something first, or use Delete");return}
+    dbTry(sb.from(tbl).update({text:v}).eq("id",id).select("id")).then(d=>{if(!d||!d.length){toast("Couldn't save that one. Run the latest SQL update.");return}
+      const L=tbl==="journal"?S.journal:S.gnotes;const e=L.find(x=>x.id===id);if(e)e.text=v;closeSheet();render();toast("Saved")}).catch(()=>{})}
+  else if(ds.fullnameform!==undefined){const n=document.getElementById("fn-name").value.trim().replace(/\s+/g," ").slice(0,60);if(!fullName(n)){toast("Add your first and last name");return}
+    dbTry(sb.from("members").upsert({id:ME.id,name:n})).then(()=>{ME.name=n;page=null;render();toast("Thanks, "+n.split(" ")[0]+"!")}).catch(()=>{})}
   else if(ds.contactform!==undefined){const ph=document.getElementById("c-phone").value.trim(),em=document.getElementById("c-email").value.trim();
     if(!validPhone(ph)){toast("Add your phone number, with area code");return}if(!validEmail(em)){toast("That email doesn't look right");return}
     const btn=f.querySelector("button[type=submit]");btn.disabled=true;
-    saveContact(ph,em).then(()=>{page=null;render();toast("Thanks! You're all set.")}).catch(()=>{btn.disabled=false;toast("Couldn't save. Check your connection.")})}
+    saveContact(ph,em).then(()=>{if(needsFullName()){welcomeMode="fullname";render();return}page=null;render();toast("Thanks! You're all set.")}).catch(()=>{btn.disabled=false;toast("Couldn't save. Check your connection.")})}
   else if(ds.acctcontact!==undefined){const ph=document.getElementById("acct-phone").value.trim(),em=document.getElementById("acct-email").value.trim();
     if(!validPhone(ph)){toast("Add your phone number, with area code");return}if(!validEmail(em)){toast("That email doesn't look right");return}
     saveContact(ph,em).then(()=>{closeSheet();toast("Contact info saved")}).catch(()=>toast("Couldn't save. Check your connection."))}
-  else if(ds.renameform!==undefined){const n=document.getElementById("acct-name").value.trim().slice(0,60);if(!n)return;dbTry(sb.from("members").upsert({id:ME.id,name:n})).then(()=>{ME.name=n;if(S.invite&&!S.invite.name)S.invite.name=n;closeSheet();render();toast("Name saved")}).catch(()=>{})}
+  else if(ds.renameform!==undefined){const n=document.getElementById("acct-name").value.trim().replace(/\s+/g," ").slice(0,60);if(!n)return;if(!ME.admin&&!fullName(n)){toast("Add your first and last name");return}dbTry(sb.from("members").upsert({id:ME.id,name:n})).then(()=>{ME.name=n;if(S.invite&&!S.invite.name)S.invite.name=n;closeSheet();render();toast("Name saved")}).catch(()=>{})}
 });
 document.addEventListener("input",e=>{const fd=e.target.dataset;
   if(fd.ans){const w=O2(S.wb,fd.ans);const A=O2(O2(w,"ans"),fd.st);A[fd.i]=e.target.value;save();return}
