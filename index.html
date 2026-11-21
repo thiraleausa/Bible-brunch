@@ -71,6 +71,11 @@ button.tile:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 
 .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .cards .first{grid-column:1 / -1}
+.tw{display:flex;flex-direction:column;gap:7px;min-width:0}
+.seg.mini{border-radius:12px;border-width:2px}
+.seg.mini button{padding:7px 2px;font-size:12.5px;border-left-width:2px}
+.seg.mini button[aria-pressed="true"][data-rsvp="going"]{background:var(--green)}
+.seg.mini button[aria-pressed="true"][data-rsvp="no"]{background:#FFD0E4}
 .hint{font-weight:700;color:var(--soft);font-size:14px;margin:0}
 
 /* boxes */
@@ -108,6 +113,11 @@ button.tile:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .list li{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:2px dashed #DADAE3}
 .list li:first-child{border-top:0}
+.allb{background:#FFF6C9}
+.allitem{font-family:var(--disp,inherit);font-weight:900;font-size:22px;margin:-4px 0 0}
+.allme{display:flex;align-items:center;gap:12px;background:var(--paper);border:2.5px solid var(--ink);border-radius:16px;padding:10px 12px}
+.allme b{display:block;font-size:17px}
+.col{display:flex;flex-direction:column;gap:10px}
 .list .grow{flex:1;min-width:0;font-weight:800}
 .list .who{font-size:13px;font-weight:700;color:var(--soft)}
 .pill{border:2.5px solid var(--ink);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:900;white-space:nowrap}
@@ -301,6 +311,8 @@ button.fbbox{align-items:center}
 .fbicon svg{width:24px;height:24px}
 .fbselect{width:100%;border:2.5px solid var(--ink);border-radius:14px;padding:10px 12px;font-weight:700;background:var(--paper)}
 .fbchips{display:flex;flex-wrap:wrap;gap:8px}
+.fbbetter .bd-pick,.fbbetter .bt-pick{display:none;margin-top:4px}
+.fbbetter.sd .bd-pick,.fbbetter.st .bt-pick{display:flex}
 .fbchip input{position:absolute;opacity:0;width:1px;height:1px}
 .fbchip span{display:inline-block;border:2.5px solid var(--ink);border-radius:999px;padding:6px 12px;font-weight:800;font-size:14px;background:var(--paper);cursor:pointer}
 .fbchip input:checked+span{background:var(--yellow)}
@@ -526,7 +538,8 @@ async function loadAll(){if(!sb||!ME.id)return;
   G.attReady=!(att&&att.error);G.att={};((att&&att.data)||[]).forEach(a=>{(G.att[a.month]=G.att[a.month]||{})[a.user_id]=a.attended});G.contacts=Object.fromEntries(((cts&&cts.data)||[]).map(c=>[c.user_id,c]));
   if(mine.data&&mine.data.data){lastMine=JSON.stringify(mine.data.data);Object.assign(S,mine.data.data)}
   S.rsvp={};G.rsvps={};(rs.data||[]).forEach(r=>{const m=r.user_id===ME.id;if(m)S.rsvp[r.month]=r.status;(G.rsvps[r.month]=G.rsvps[r.month]||[]).push({uid:r.user_id,name:r.name,status:r.status,mine:m})});
-  S.claims={};(cl.data||[]).forEach(c=>{(S.claims[c.month]=S.claims[c.month]||{})[c.item]=c.user_id===ME.id?"You":c.name});
+  S.claims={};G.all={};(cl.data||[]).forEach(c=>{if(c.item.startsWith(ALLP)){const what=c.item.split("|").slice(2).join("|");(G.all[c.month]=G.all[c.month]||[]).push({uid:c.user_id,name:c.name,what,item:c.item,mine:c.user_id===ME.id});return}
+    (S.claims[c.month]=S.claims[c.month]||{})[c.item]=c.user_id===ME.id?"You":c.name});
   const H=hits.data||[];
   S.prayers=(pr.data||[]).map(p=>({id:p.id,who:p.user_id===ME.id?"You":p.name,mine:p.user_id===ME.id,text:p.text,ans:p.answered,when:ago(p.created_at),n:H.filter(h=>h.prayer_id===p.id).length,me:H.some(h=>h.prayer_id===p.id&&h.user_id===ME.id)}));
   S.journal=(jn.data||[]).map(j=>({id:j.id,key:j.month,who:j.user_id===ME.id?"You":j.name,text:j.text,shared:j.shared}));
@@ -652,6 +665,7 @@ function secretPicker(uid){const k=secKey;const m=G.members.find(x=>x.id===uid);
    <form data-seccustom="${uid}" class="row"><input type="text" id="sec-custom" placeholder="Or write one just for them" aria-label="Custom assignment"><button class="btn y" type="submit">Use</button></form>
    ${isOv?`<button class="btn w block" data-secauto="${uid}">Go back to automatic</button>`:""}`)}
 const FB_REASONS=["Works for me","Too early","Too late","Wrong day of the week","Conflicts with something","Too long","Would prefer an evening","Would prefer a weekend morning"];
+const FB_TIMES=["8:00 AM","9:00 AM","10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM","7:00 PM","8:00 PM"];
 function fbLabel(k){if(!k)return "Dates and times in general";const t=byId[S.plan[k]];return t?`${t.name} · ${fmtMon(eventDate(k,t))} ${eventDate(k,t).getDate()}`:"A past gathering"}
 function feedbackBox(){
   if(ME.admin){const open=G.feedback.filter(f=>!f.resolved);
@@ -665,7 +679,11 @@ function feedbackSheet(k){const ks=months().filter(x=>S.plan[x]&&eventDate(x,byI
   sheet(`<div class="h2">Feedback on dates & times</div><form data-fbform style="display:flex;flex-direction:column;gap:12px;overflow-y:auto;padding:2px">
    <label class="field"><span class="label">Which gathering?</span><select id="fb-k" class="fbselect"><option value="">All of them / in general</option>${ks.map(x=>`<option value="${x}" ${x===k?"selected":""}>${esc(fbLabel(x))}</option>`).join("")}</select></label>
    <div class="field"><span class="label">Tap any that fit</span><div class="fbchips">${FB_REASONS.map((r,i)=>`<label class="fbchip"><input type="checkbox" id="fb-r-${i}" value="${esc(r)}"><span>${esc(r)}</span></label>`).join("")}</div></div>
-   <label class="field"><span class="label">Anything else? (optional)</span><textarea id="fb-text" maxlength="1000" placeholder="e.g. Saturdays at 10 are hard with nap time. 4 PM would be easier."></textarea></label>
+   <div class="field fbbetter"><span class="label">Is there a better day or time that works for you?</span>
+    <div class="fbchips"><label class="fbchip"><input type="checkbox" id="fb-bd"><span>A better day</span></label><label class="fbchip"><input type="checkbox" id="fb-bt"><span>A better time</span></label></div>
+    <label class="field bd-pick"><span class="label">Which day?</span><select id="fb-day" class="fbselect"><option value="">Pick a day</option>${["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].map(d=>`<option>${d}</option>`).join("")}</select></label>
+    <label class="field bt-pick"><span class="label">What time?</span><select id="fb-time" class="fbselect"><option value="">Pick a time</option>${FB_TIMES.map(x=>`<option>${x}</option>`).join("")}</select></label></div>
+   <label class="field"><span class="label">Notes (optional)</span><textarea id="fb-text" maxlength="1000" placeholder="e.g. Saturdays at 10 are hard with nap time. 4 PM would be easier."></textarea></label>
    <button class="btn block" type="submit">Send feedback</button></form>`)}
 function attendanceBox(k){if(!G.attReady)return `<div class="box"><p>Attendance isn't set up yet. Run the latest SQL in Supabase, then reload.</p></div>`;
   const rs=G.rsvps[k]||[];const A=G.att[k]||{};const byUid=Object.fromEntries(rs.map(r=>[r.uid,r]));
@@ -710,7 +728,15 @@ const DEFAULT_TITLES=["Icebreaker","Read it together","Talk about it","Journal",
 const D=(k,f,def)=>{const o=k?det(k):{};return o[f]!=null&&o[f]!==""?o[f]:def};
 const readOf=(k,t)=>D(k,"read",t.read);
 const prepTasksOf=(k,t)=>D(k,"prepTasks",[t.prep,`Read ${readOf(k,t)} before you come`,"Claim something from the food list","Bring your Bible, a journal, and a pen"]);
-const bringOf=(k,t)=>D(k,"bring",t.bring.concat(S.extra[k]||[]));
+const ALLP="@all|";
+const ALL_DEFAULT={cookiescor:["A dozen cookies","What kind of cookies are you bringing?"],brunch:["A brunch dish","What brunch dish are you bringing?"],service:["A brunch dish","What brunch dish are you bringing?"],
+  bread:["A loaf of bread","What kind of bread are you bringing?"],honey:["A honey to share","What honey are you bringing?"],soup:["A pot of soup","What soup are you bringing?"],
+  charcuterie:["One item for the board","What are you bringing for the board?"],fellowship:["A dish to share","What dish are you bringing?"],commandments:["A dozen sugar cookies","What kind of sugar cookies are you bringing?"]};
+function allBringOf(k,t){const o=det(k).allBring;if(o)return o.off?null:o;const d=ALL_DEFAULT[t.id];return d?{item:d[0],ask:d[1]}:null}
+const normB=x=>String(x).toLowerCase().replace(/[^a-z0-9]/g,"");
+const SAME_AS_ALL={"adozencookies":1,"brunchdish":1,"abrunchdish":1,"aloafofbread":1,"soupapot":1,"localhoney":1,"sugarcookies":1};
+const bringOf=(k,t)=>{const L=D(k,"bring",t.bring.concat(S.extra[k]||[]));const a=allBringOf(k,t);if(!a)return L;const ai=normB(a.item);
+  return L.filter(x=>{const n=normB(x);return n!==ai&&!(SAME_AS_ALL[n]&&det(k).bring==null)})};
 const qsOf=(k,t)=>D(k,"qs",t.qs);
 const secretsOf=k=>D(k,"secrets",SECRETS);
 const stepTitle=(k,i)=>((k?det(k).titles:null)||[])[i]||DEFAULT_TITLES[i];
@@ -752,7 +778,8 @@ function home(){
   return `<div class="top"><div><div class="brand">Bible Brunch<span class="dot">.</span></div><div class="sub">One table. One theme. Every month.</div><div class="sync" id="sync"></div></div>
    </div>
   <div class="pad">
-   ${ks.length?`<div class="cards">${ks.map((k,i)=>{const t=byId[S.plan[k]];return tile(t,{key:k,badge:k.slice(0,7)===c?"This month":"",tag:"button",attrs:`data-open="${k}" aria-label="${esc(t.name)}, ${monName(k)}"`})}).join("")}</div>
+   ${ks.length?`<div class="cards">${ks.map((k,i)=>{const t=byId[S.plan[k]];const r=S.rsvp[k]||"";return `<div class="tw">${tile(t,{key:k,badge:k.slice(0,7)===c?"This month":"",tag:"button",attrs:`data-open="${k}" aria-label="${esc(t.name)}, ${monName(k)}"`})}
+     <div class="seg mini" role="group" aria-label="RSVP for ${esc(t.name)}">${[["going","Going"],["maybe","Maybe"],["no","Can't"]].map(([v,l])=>`<button data-rsvp="${v}" data-key="${k}" aria-pressed="${r===v}" aria-label="${v==="no"?"Can't come":l}">${l}</button>`).join("")}</div></div>`}).join("")}</div>
    ${feedbackBox()}
    ${homeStrip(curGathering())}
    <button class="btn block" data-openinvite style="font-size:17px;padding:14px">Invite a friend to Bible Brunch</button>
@@ -789,13 +816,39 @@ function prep(t,k){
     ${faces(k)}</div>
    <div class="box"><div class="bhead"><div class="h2">Before you come</div><button class="editpill" data-ed="prep" data-k="${k}">Edit</button></div>
     ${tasks.map((x,i)=>`<label class="check"><input type="checkbox" id="prep-${k}-${i}" data-prep="${k}" data-i="${i}" ${pc[i]?"checked":""}><span>${esc(x)}</span></label>`).join("")}</div>
-   <div class="box"><div class="bhead"><div class="h2">Food sign-up</div><button class="editpill" data-ed="bring" data-k="${k}">Edit</button></div><p class="sub">${Object.keys(claims).length} of ${items.length} claimed</p>
+   ${allBringBox(k,t)}
+   <div class="box"><div class="bhead"><div class="h2">${allBringOf(k,t)?"Just need one":"Food sign-up"}</div><button class="editpill" data-ed="bring" data-k="${k}">Edit</button></div><p class="sub">${allBringOf(k,t)?"One person brings each of these. ":""}${Object.keys(claims).length} of ${items.length} claimed</p>
     <ul class="list">${items.map(it=>{const who=claims[it];const mine=who==="You";
       return `<li><div class="grow">${esc(it)}<div class="who">${who?(mine?"You're bringing this":esc(who)+" is bringing this"):"Still needed"}</div></div>
       <button class="pill ${mine?"on":who?"taken":""}" data-claim="${esc(it)}" data-key="${k}" ${who&&!mine?"disabled":""}>${mine?"Claimed ✓":who?"Taken":"I'll bring it"}</button></li>`}).join("")}</ul>
     <form class="row" data-addfood="${k}"><input type="text" id="addfood-${k}" placeholder="Bringing something else? Add it" aria-label="Add something you'll bring"><button class="btn y" type="submit">I'll bring it</button></form>
    </div>`;
 }
+
+function allBringBox(k,t){const a=allBringOf(k,t);
+  if(!a)return ME.admin?`<button class="btn w block" data-allbring="${k}">+ Add something everyone brings</button>`:"";
+  const L=(G.all[k]||[]).slice().sort((x,y)=>y.mine-x.mine||x.name.localeCompare(y.name));const me=L.find(x=>x.mine);
+  const going=(G.rsvps[k]||[]).filter(r=>r.status==="going");const waiting=going.filter(r=>!L.some(x=>x.uid===r.uid));
+  return `<div class="box allb"><div class="bhead"><div class="h2">Everyone brings</div>${ME.admin?`<button class="editpill" data-allbring="${k}">Edit</button>`:""}</div>
+   <p class="allitem">${esc(a.item)}</p>
+   <p class="sub" style="margin-top:-4px">Everyone brings one, so don't skip it if someone else signed up. Tell us what kind so we don't double up.</p>
+   ${me?`<div class="allme"><span class="grow"><span class="label">You're bringing</span><b>${esc(me.what)}</b></span><button class="pill" data-allchange="${k}">Change</button></div>`
+     :`<form class="col" data-allform="${k}"><label class="field"><span class="label">${esc(a.ask)}</span><input type="text" id="all-${k}" maxlength="78" required placeholder="e.g. ${esc(allHint(a))}"></label><button class="btn block" type="submit">I'll bring it ✓</button></form>`}
+   ${L.length?`<div class="label" style="margin-top:6px">Already coming (${L.length})</div><ul class="list">${L.map(x=>`<li><div class="grow"><b>${esc(x.what)}</b><div class="who">${x.mine?"You":esc(x.name)}</div></div>${ME.admin&&!x.mine?`<button class="x" data-allrm="${esc(x.item)}" data-k="${k}" aria-label="Remove">✕</button>`:""}</li>`).join("")}</ul>`:`<p class="who">No one has signed up yet. Be the first!</p>`}
+   ${ME.admin&&waiting.length?`<p class="who"><b style="color:var(--ink)">Going but haven't said yet:</b> ${waiting.map(r=>esc(r.name)).join(", ")}</p>`:""}
+  </div>`}
+function allHint(a){const n=normB(a.item);return /cookie/.test(n)?"Chocolate chip":/brunch|dish/.test(n)?"Breakfast casserole":/bread/.test(n)?"Sourdough":/soup/.test(n)?"Chicken tortilla":/honey/.test(n)?"Raw clover honey":"What you're bringing"}
+function allBringSheet(k){const t=byId[S.plan[k]];const a=allBringOf(k,t)||{item:"",ask:""};
+  sheet(`<div class="h2">Everyone brings</div><p class="sub">For things every person brings, like a dozen cookies or a brunch dish. Each person tells you what kind.</p>
+   <form data-allcfg="${k}" class="col" style="gap:12px">
+    <label class="field"><span class="label">What does everyone bring?</span><input type="text" id="ac-item" maxlength="80" value="${esc(a.item)}" placeholder="e.g. A dozen cookies"></label>
+    <label class="field"><span class="label">Question to ask them</span><input type="text" id="ac-ask" maxlength="100" value="${esc(a.ask)}" placeholder="e.g. What kind of cookies are you bringing?"></label>
+    <button class="btn block" type="submit">Save</button></form>
+   ${allBringOf(k,t)?`<button class="btn w block" data-alloff="${k}">Nothing everyone brings this time</button>`:""}`)}
+function allSave(k,what){const old=(G.all[k]||[]).find(x=>x.mine);const item=ALLP+ME.id+"|"+what;
+  G.all[k]=(G.all[k]||[]).filter(x=>!x.mine);G.all[k].push({uid:ME.id,name:ME.name,what,item,mine:true});render();
+  const del=old?sb.from("claims").delete().eq("month",k).eq("item",old.item):Promise.resolve({});
+  return Promise.resolve(del).then(()=>sb.from("claims").insert({month:k,item,user_id:ME.id,name:ME.name})).then(({error})=>{if(error){toast("Couldn't save. Check your connection.");refresh()}})}
 
 /* ---------- day-of workbook ---------- */
 const BUILTIN={ice:0,read:1,talk:2,journal:3,photo:4,secret:5,chal:6,prayer:7};
@@ -1317,6 +1370,12 @@ document.addEventListener("click",e=>{
   else if(ds.pick){pickTheme(ds.pick)}
   else if(ds.edit){editMonth(ds.edit)}
   else if(ds.ed){edit(ds.ed,ds.k,ds.i)}
+  else if(ds.allbring){allBringSheet(ds.allbring)}
+  else if(ds.alloff){O2(S,"details");S.details[ds.alloff]=Object.assign(det(ds.alloff),{allBring:{off:true}});save();closeSheet();render();toast("Removed")}
+  else if(ds.allchange){const k=ds.allchange;const me=(G.all[k]||[]).find(x=>x.mine);G.all[k]=(G.all[k]||[]).filter(x=>!x.mine);render();
+    const inp=document.getElementById("all-"+k);if(inp&&me){inp.value=me.what;inp.focus()}
+    if(me)sb.from("claims").delete().eq("month",k).eq("item",me.item).then(({error})=>{if(error){toast("Couldn't save. Check your connection.");refresh()}})}
+  else if(ds.allrm){const k=ds.k;if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Remove?";return}G.all[k]=(G.all[k]||[]).filter(x=>x.item!==ds.allrm);render();sb.from("claims").delete().eq("month",k).eq("item",ds.allrm).then(({error})=>{if(error)refresh()})}
   else if(ds.ladd!==undefined){syncHead();LD.items.push(LD.kind==="chal"?{id:"x"+Date.now(),text:"",pts:3,days:7,row:false}:"");drawList();setTimeout(()=>document.getElementById("li-"+(LD.items.length-1))?.focus(),0)}
   else if(ds.ldel){syncHead();LD.items.splice(Number(ds.ldel),1);drawList()}
   else if(ds.lmove){syncHead();const i=Number(ds.lmove),j=i+Number(ds.d);[LD.items[i],LD.items[j]]=[LD.items[j],LD.items[i]];drawList()}
@@ -1346,6 +1405,7 @@ document.addEventListener("click",e=>{
   else if(ds.cancel!==undefined){closeSheet()}
 });
 document.addEventListener("change",e=>{const el=e.target,ds=el.dataset;
+  if(el.id==="fb-bd"||el.id==="fb-bt"){el.closest(".fbbetter").classList.toggle(el.id==="fb-bd"?"sd":"st",el.checked);return}
   if(LD&&LD.mode==="list"){if(ds.lp!=null){LD.items[ds.lp].pts=Number(el.value);return}if(ds.lr!=null){LD.items[ds.lr].row=el.checked;return}if(ds.ld!=null||ds.li!=null)return}if(ds.fmin)return;
   if(ds.prep){O2(S.prep,ds.prep)[ds.i]=el.checked;if(el.checked)burst(el,ds.prep)}
   else if(ds.sdone){S.secretDone[ds.sdone]=el.checked;if(el.checked)burst(el,ds.sdone,26);if(el.checked)toast("+2 points. Mission complete. Shh.");save();render();return}
@@ -1371,7 +1431,16 @@ document.addEventListener("submit",e=>{e.preventDefault();const f=e.target,ds=f.
   else if(ds.iadd!==undefined){const n=document.getElementById("ia-name").value.trim(),ph=document.getElementById("ia-phone").value.trim();if(!n){toast("Add a name first");return}
     if(ph.replace(/\D/g,"").length<7){toast("Add a phone number");return}
     dbTry(sb.from("interested").insert({name:n.slice(0,80),phone:ph.slice(0,30),invited_by:document.getElementById("ia-by").value.trim().slice(0,60)})).then(()=>{toast("Added");refresh()}).catch(()=>{})}
-  else if(ds.fbform!==undefined){const k=document.getElementById("fb-k").value;const topics=[...f.querySelectorAll(".fbchip input:checked")].map(x=>x.value);const text=document.getElementById("fb-text").value.trim().slice(0,1000);
+  else if(ds.allform){const k=ds.allform;const what=document.getElementById("all-"+k).value.trim().replace(/\s+/g," ").slice(0,78);if(!what){toast("Tell us what you're bringing");return}
+    const dup=(G.all[k]||[]).find(x=>!x.mine&&normB(x.what)===normB(what));
+    if(dup&&f.dataset.armed!==normB(what)){f.dataset.armed=normB(what);toast(`${dup.name} is already bringing ${what}. Tap again to bring it anyway.`);return}
+    allSave(k,what);toast("Thanks! Got it.");burst(null,k)}
+  else if(ds.allcfg){const k=ds.allcfg;const item=document.getElementById("ac-item").value.trim();const ask=document.getElementById("ac-ask").value.trim()||"What are you bringing?";
+    O2(S,"details");S.details[k]=Object.assign(det(k),{allBring:item?{item,ask}:{off:true}});save();closeSheet();render();toast("Saved")}
+  else if(ds.fbform!==undefined){const k=document.getElementById("fb-k").value;const topics=[...f.querySelectorAll('input[id^="fb-r-"]:checked')].map(x=>x.value);
+    const bd=document.getElementById("fb-bd").checked,bt=document.getElementById("fb-bt").checked,day=document.getElementById("fb-day").value,tm=document.getElementById("fb-time").value;
+    if(bd&&!day){toast("Pick the day that works better");return}if(bt&&!tm){toast("Pick the time that works better");return}
+    if(bd)topics.push("Better day: "+day);if(bt)topics.push("Better time: "+tm);const text=document.getElementById("fb-text").value.trim().slice(0,1000);
     if(!topics.length&&!text){toast("Tap an option or write a note");return}const btn=f.querySelector("button[type=submit]");btn.disabled=true;btn.textContent="Sending…";
     sb.from("feedback").insert({user_id:ME.id,name:ME.name,month:k||null,topic:topics.join(" · ").slice(0,300),text}).then(({error})=>{
       if(error){console.error(error);btn.disabled=false;btn.textContent="Send feedback";toast(G.feedbackReady?"Couldn't send. Check your connection.":"Feedback isn't set up yet. Tell the host.");return}
