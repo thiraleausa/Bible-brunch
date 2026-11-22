@@ -137,6 +137,12 @@ summary .grow{display:flex;flex-direction:column}
 .upnext{flex-direction:row!important;align-items:center;gap:12px;text-align:left;background:#C9F2FF;cursor:pointer;width:100%}
 .upnext .grow{display:flex;flex-direction:column;gap:2px}
 .intab .dtop{padding-top:4px}
+.ctabsel{position:relative;display:flex;align-items:center;border:2.5px solid var(--ink);border-radius:16px;background:var(--yellow);box-shadow:3px 3px 0 var(--ink);margin-bottom:2px}
+.ctabsel .ico{position:absolute;left:14px;font-size:20px;pointer-events:none}
+.ctabsel select{appearance:none;-webkit-appearance:none;width:100%;border:0;background:transparent;font:inherit;font-weight:900;font-size:18px;color:var(--ink);padding:13px 44px 13px 16px;border-radius:16px}
+.ctabsel select:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.ctabsel .caret{position:absolute;right:16px;font-size:18px;font-weight:900;pointer-events:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .note.arch{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .list.mine li{align-items:center}.list.mine .info{flex:1;text-align:left;background:none;border:0;padding:0;display:flex;flex-direction:column}
 .list.mine .info small{font-weight:700;color:var(--muted,#555)}
@@ -1180,6 +1186,11 @@ function pageName(){if(page)return page==="invite"?"Invite a friend":page==="lan
   return {home:"Home",collective:"Collective · "+ctab,plan:"Plan",themes:"Themes",me:"My Brunch"}[tab]||tab}
 
 /* ---------- collective ---------- */
+const CTAB_ICON={Photos:"📸",Journal:"📖",Challenges:"🏆",Prayer:"🙏",Archive:"🗂️",Members:"👥",Activity:"📊",Feedback:"💬",Interested:"✨"};
+function ctabMenu(){const all=["Photos","Journal","Challenges","Prayer","Archive"],host=["Members","Activity","Feedback","Interested"];
+  const opt=x=>`<option value="${x}" ${ctab===x?"selected":""}>${CTAB_ICON[x]}  ${x}</option>`;
+  return `<label class="ctabsel"><span class="sr">Show</span><select id="ctab-sel" aria-label="Choose a section">${ME.admin?`<optgroup label="Everyone">${all.map(opt).join("")}</optgroup><optgroup label="Host only">${host.map(opt).join("")}</optgroup>`:all.map(opt).join("")}</select>
+   <span class="caret" aria-hidden="true">▾</span></label>`}
 function archiveView(){const ks=months().filter(k=>S.plan[k]&&isArchived(k)).reverse();
   if(!ks.length)return `<div class="box"><p class="who">Nothing in the archive yet. Gatherings land here once they're marked complete or their date has passed.</p></div>`;
   return `<p class="who" style="margin:0 2px">Every past gathering, with its plan, prep, day-of workbook, and challenges. Tap one to open it.</p>
@@ -1226,7 +1237,7 @@ function collective(){
       <button class="pray" data-pray="${p.id}" aria-pressed="${p.me}">${p.me?"Praying":"I'll pray"} · ${p.n}</button></div></div>`).join("")}</div>`;
   }
   return `<div class="top"><div><div class="brand">The Collective<span class="dot">.</span></div><div class="sub">Everything we've gathered, all in one place.</div></div></div>
-   <div class="pad"><div class="chips">${["Photos","Journal","Challenges","Prayer","Archive"].concat(ME.admin?["Members","Activity","Feedback","Interested"]:[]).map(x=>`<button class="chip" data-ctab="${x}" aria-pressed="${ctab===x}">${x}</button>`).join("")}</div>${body}</div>`;
+   <div class="pad">${ctabMenu()}${body}</div>`;
 }
 
 /* ---------- plan + themes ---------- */
@@ -1609,6 +1620,7 @@ document.addEventListener("click",e=>{
   else if(ds.cancel!==undefined){closeSheet()}
 });
 document.addEventListener("change",e=>{const el=e.target,ds=el.dataset;
+  if(el.id==="ctab-sel"){ctab=el.value;render();return}
   if(el.id==="fb-bd"||el.id==="fb-bt"){el.closest(".fbbetter").classList.toggle(el.id==="fb-bd"?"sd":"st",el.checked);return}
   if(LD&&LD.mode==="list"){if(ds.lp!=null){LD.items[ds.lp].pts=Number(el.value);return}if(ds.lr!=null){LD.items[ds.lr].row=el.checked;return}if(ds.ld!=null||ds.li!=null)return}if(ds.fmin)return;
   if(ds.prep){O2(S.prep,ds.prep)[ds.i]=el.checked;if(el.checked)burst(el,ds.prep)}
