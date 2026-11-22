@@ -137,6 +137,7 @@ summary .grow{display:flex;flex-direction:column}
 .upnext{flex-direction:row!important;align-items:center;gap:12px;text-align:left;background:#C9F2FF;cursor:pointer;width:100%}
 .upnext .grow{display:flex;flex-direction:column;gap:2px}
 .intab .dtop{padding-top:4px}
+.note.arch{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .list.mine li{align-items:center}.list.mine .info{flex:1;text-align:left;background:none;border:0;padding:0;display:flex;flex-direction:column}
 .list.mine .info small{font-weight:700;color:var(--muted,#555)}
 .kind.st-going{background:var(--green)}.kind.st-maybe{background:#FFE6A8}.kind.st-no{background:#FFD0E4}
@@ -678,7 +679,9 @@ const fmtMon=d=>d.toLocaleDateString("en-US",{month:"short"});
 const monName=k=>{const [y,m]=k.slice(0,7).split("-").map(Number);return new Date(y,m-1,1).toLocaleDateString("en-US",{month:"long",year:"numeric"})};
 const monShort=k=>{const [y,m]=k.slice(0,7).split("-").map(Number);return new Date(y,m-1,1).toLocaleDateString("en-US",{month:"long"})};
 function curKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`}
-function homeKeys(){const c=curKey();const ks=months().filter(k=>k.slice(0,7)>=c&&S.plan[k]);return ks.slice(0,4)}
+const isDone=k=>!!(k&&S.details&&S.details[k]&&S.details[k].done);
+function isArchived(k){const t=byId[S.plan[k]];return !!t&&(isDone(k)||eventDate(k,t)<today())}
+function homeKeys(){return upcomingKeys().slice(0,4)}
 function nextAfter(k){return months().find(x=>x>k&&S.plan[x])}
 function curGathering(){const c=curKey();const ks=months().filter(k=>k.slice(0,7)===c&&S.plan[k]);if(!ks.length)return c;const t0=today();let pick=ks[0];ks.forEach(k=>{if(eventDate(k,byId[S.plan[k]])<=t0)pick=k});return pick}
 function monthOffset(k){let h=7;for(const ch of k)h=(h*31+ch.charCodeAt(0))>>>0;return h}
@@ -823,7 +826,7 @@ const TXT={ice:t=>t.ice,verseText:t=>t.text,verseRef:t=>t.ref,jp:(t,k)=>`Take fi
   photoNote:()=>"Everyone in. Every month.",chIntro:()=>"Before you leave, everyone picks challenges worth 10 points to work on until the next gathering. Challenges have their own tab, so you can log your days all month.",
   prayer:()=>"Share a request, then pray for the person on your right."};
 const txt=(k,t,f)=>D(k,f,TXT[f](t,k));
-function flowOf(k,t){const o=k?det(k):{};return o.flow||t.flow||FLOW[t.cat]}
+function flowOf(k,t){const o=k?det(k):{};return (o.flow||t.flow||FLOW[t.cat]).map(r=>/^secret assignments? (&|and) /i.test(r[1])?[r[0],r[1].replace(/^secret assignments? (&|and) /i,"").replace(/^./,c=>c.toUpperCase()),...r.slice(2)]:r).filter(r=>!/^(your )?secret assignments?$/i.test(String(r[1]).trim()))}
 function setupOf(k,t){const o=k?det(k):{};return o.setting!=null&&o.setting!==""?o.setting:t.setting}
 function timeOf(k,t){const o=k?det(k):{};if(o.time){const [h,m]=o.time.split(":").map(Number);return clock(h*60+m)}return t.time||"10:00 AM"}
 function to24(s){const [hm,ap]=s.split(" ");let [h,m]=hm.split(":").map(Number);if(ap==="PM"&&h!==12)h+=12;if(ap==="AM"&&h===12)h=0;return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`}
@@ -896,6 +899,7 @@ function prep(t,k){
    <div class="box"><div class="h2">Are you coming?</div>
     <div class="seg" role="group" aria-label="RSVP">${[["going","Going"],["maybe","Maybe"],["no","Can't come"]].map(([v,l])=>`<button data-rsvp="${v}" data-key="${k}" aria-pressed="${r===v}">${l}</button>`).join("")}</div>
     ${faces(k)}</div>
+   ${secretCard(k)}
    <div class="box"><div class="bhead"><div class="h2">Before you come</div><button class="editpill" data-ed="prep" data-k="${k}">Edit</button></div>
     ${tasks.map((x,i)=>`<label class="check"><input type="checkbox" id="prep-${k}-${i}" data-prep="${k}" data-i="${i}" ${pc[i]?"checked":""}><span>${esc(x)}</span></label>`).join("")}</div>
    ${allBringBox(k,t)}
@@ -938,7 +942,10 @@ const BUILTIN_COLORS={ice:"#7DF3F0",read:"#FFE14D",talk:"#FF9ECF",journal:"#C9F2
 const EVERY_MONTH=["photo","secret","chal"];
 const CUSTOM_COLORS=["#FFE45E","#B5F2FF","#FFC2E2","#CFF7A1","#FFD0A8","#E2B8FF"];
 const KIND_LABEL={note:"Instructions",ask:"Questions everyone answers"};
-const stepsOf=k=>{const st=k?det(k).steps:null;return Array.isArray(st)&&st.length?st:Object.keys(BUILTIN).map(id=>({id}))};
+const stepsOf=k=>{const st=k?det(k).steps:null;return (Array.isArray(st)&&st.length?st:Object.keys(BUILTIN).map(id=>({id}))).filter(x=>x.id!=="secret")};
+function secretCard(k){const w=O2(S.wb,k);return `<div class="box"><div class="bhead"><div class="h2">Your secret assignment</div></div>
+   <button class="secret ${w.secret?"open":""}" data-flip="secret" data-key="${k}">${w.secret?`Only you can see this<big>${esc(secretFor(k))}</big>`:`Tap to reveal<br><span class="sub" style="color:#fff">Don't share it with anyone.</span>`}</button>
+   ${w.secret?`<p class="sub" style="margin:0">Everyone gets a different one. Check it off on the Challenges tab when you've done it.</p>`:""}${ME.admin?`<button class="btn w" data-secopen="${k}">Host: see and edit who got what</button>`:""}</div>`}
 const isBuiltin=st=>BUILTIN[st.id]!==undefined;
 const stepName=(k,st)=>isBuiltin(st)?stepTitle(k,BUILTIN[st.id]):(st.title||KIND_LABEL[st.kind]);
 const stepColor=(st,i)=>isBuiltin(st)?BUILTIN_COLORS[st.id]:CUSTOM_COLORS[i%CUSTOM_COLORS.length];
@@ -968,6 +975,7 @@ function workbook(t,k){
   const steps=stepsOf(k);const n=steps.filter(st=>done[st.id]).length;
   return `
    ${ME.admin?`<div class="two"><button class="btn y" data-wbedit="${k}">Edit this workbook</button><button class="btn w" data-editflow="${k}">Edit itinerary</button></div>`:""}
+   ${secretCard(k)}
    <div class="box"><div style="display:flex;justify-content:space-between;align-items:baseline"><div class="h2">Day-of workbook</div><b>${n}/${steps.length}</b></div>
     <div class="progress"><span style="width:${steps.length?n/steps.length*100:0}%"></span></div>
     ${before?`<div class="note">Opens ${fmtLong(d)}. You're looking at a preview.</div>`:isDay?`<div class="note">It's gathering day. Work through it together.</div>`:""}</div>
@@ -1094,7 +1102,7 @@ function challenges(k){
 
 function detail(){
   return gatheringView(detailKey,detailId,false)}
-function upcomingKeys(){const t0=today();return months().filter(k=>S.plan[k]&&eventDate(k,byId[S.plan[k]])>=t0)}
+function upcomingKeys(){const t0=today();return months().filter(k=>S.plan[k]&&!isDone(k)&&eventDate(k,byId[S.plan[k]])>=t0)}
 let nextPick=null;
 function nextKeyNow(){const up=upcomingKeys();if(nextPick&&up.slice(0,3).includes(nextPick))return nextPick;return featured()}
 function upNext(){const k=nextKeyNow();const id=S.plan[k];if(!id)return `<div class="top"><div><div class="brand">Up next<span class="dot">.</span></div></div></div><div class="pad"><div class="empty">Nothing planned yet.</div></div>`;
@@ -1103,16 +1111,19 @@ function upNext(){const k=nextKeyNow();const id=S.plan[k];if(!id)return `<div cl
    ${up.length>1?`<div class="pad" style="padding-bottom:0"><div class="chips">${up.map(x=>`<button class="chip" data-nextpick="${x}" aria-pressed="${x===k}">${esc(byId[S.plan[x]].name.split(/ [&+] /)[0])} · ${fmtMon(eventDate(x,byId[S.plan[x]]))} ${eventDate(x,byId[S.plan[x]]).getDate()}</button>`).join("")}</div></div>`:""}
    ${gatheringView(k,id,true)}`}
 function gatheringView(k,id,inTab){
-  const t=byId[id];const live=k&&(k.slice(0,7)===curKey()||k===featured()||(inTab&&upcomingKeys().slice(0,3).includes(k)));const isCur=live||(ME.admin&&k&&S.plan[k]===t.id);
+  const t=byId[id];const arch=k&&S.plan[k]===t.id&&isArchived(k);const live=k&&(arch||k===featured()||upcomingKeys().slice(0,3).includes(k)||(k.slice(0,7)===curKey()&&!isDone(k)));const isCur=live||(ME.admin&&k&&S.plan[k]===t.id);
   let body;
   if(isCur){body=`<div class="seg" role="tablist">${[["itin","Plan"],["prep","Prep"],["day","Day of"],["chal","Challenges"]].map(([v,l])=>`<button data-dtab="${v}" aria-pressed="${dtab===v}">${l}</button>`).join("")}</div>`}
   const inner=!isCur?itinerary(t,k)+`<div class="note">${k?`Prep, food sign-ups, and the workbook open when this is up next.`:"Add this theme to a month on the Plan tab to schedule it."}</div>`
     :dtab==="prep"?prep(t,k):dtab==="day"?workbook(t,k):dtab==="chal"?challenges(k):itinerary(t,k);
-  const badge=live?(k===featured()?"Up next":"Coming up"):"";
+  const badge=arch?(isDone(k)?"Completed":"Past"):live?(k===featured()?"Up next":"Coming up"):"";
+  const doneBar=k&&S.plan[k]===t.id?(arch?`<div class="note arch">This gathering is in the archive. ${ME.admin&&isDone(k)?`<button class="x" data-undone="${k}">Undo complete</button>`:""}</div>`
+    :ME.admin&&(k===featured()||eventDate(k,t)<=new Date(today().getTime()+864e5))?`<button class="btn g block" data-markdone="${k}">✓ Mark this gathering complete</button><p class="who" style="margin:-4px 2px 0">Moves it to the archive so Up next shows the next gathering.</p>`
+:""):"";
   const head=inTab?`<div class="dtop">${tile(t,{key:k,badge})}</div>`:`<div class="dtop"><button class="iconbtn" data-close aria-label="Back">${I.back}</button>${tile(t,{key:k,badge})}</div>`;
   const content=`${head}
    ${isCur?`<div class="dtabs">${body}</div>`:""}
-   <div class="pad" style="padding-top:${isCur?6:12}px">${isCur&&!live?`<div class="note">Host view. The group sees Prep, Day of, and Challenges for this gathering once it's up next.</div>`:""}<p style="margin:0;font-weight:800;font-size:17px">${esc(t.tag)}</p>${inner}</div>`;
+   <div class="pad" style="padding-top:${isCur?6:12}px">${doneBar}${isCur&&!live?`<div class="note">Host view. The group sees Prep, Day of, and Challenges for this gathering once it's up next.</div>`:""}<p style="margin:0;font-weight:800;font-size:17px">${esc(t.tag)}</p>${inner}</div>`;
   return inTab?`<div class="intab">${content}</div>`:`<div class="scroll" id="dscroll">${content}</div>`;
 }
 
@@ -1169,6 +1180,11 @@ function pageName(){if(page)return page==="invite"?"Invite a friend":page==="lan
   return {home:"Home",collective:"Collective · "+ctab,plan:"Plan",themes:"Themes",me:"My Brunch"}[tab]||tab}
 
 /* ---------- collective ---------- */
+function archiveView(){const ks=months().filter(k=>S.plan[k]&&isArchived(k)).reverse();
+  if(!ks.length)return `<div class="box"><p class="who">Nothing in the archive yet. Gatherings land here once they're marked complete or their date has passed.</p></div>`;
+  return `<p class="who" style="margin:0 2px">Every past gathering, with its plan, prep, day-of workbook, and challenges. Tap one to open it.</p>
+   <div class="box"><ul class="list mine">${ks.map(k=>{const t=byId[S.plan[k]];const w=(S.wb[k]||{}).done||{};const st=stepsOf(k);const n=st.filter(x=>w[x.id]).length;const came=(G.rsvps[k]||[]).filter(r=>r.status==="going").length;
+    return `<li><button class="info" data-open="${k}" data-goto="day"><b>${esc(t.name)}</b><small>${gDate(k)}${came?` · ${came} going`:""} · Workbook ${n}/${st.length}${S.photos[k]?" · 📷":""}</small></button><span class="kind ${isDone(k)?"st-going":""}">${isDone(k)?"Completed":"Past"}</span></li>`}).join("")}</ul></div>`}
 function entryTools(tbl,e){if(!e.id||!(e.mine||ME.admin))return "";return `<div class="etools"><button class="x" data-eedit="${e.id}" data-tbl="${tbl}">Edit</button><button class="x" data-edel="${e.id}" data-tbl="${tbl}">Delete</button></div>`}
 function entryEditSheet(tbl,id){const L=tbl==="journal"?S.journal:S.gnotes;const e=L.find(x=>x.id===id);if(!e)return;
   sheet(`<div class="h2">Edit ${tbl==="journal"?"journal entry":"group note"}</div><p class="sub">${e.mine?"Your entry":"By "+esc(e.who)}${e.q?` · On: ${esc(e.q)}`:""}</p>
@@ -1191,6 +1207,8 @@ function collective(){
        ${ns.length?`<details class="jsub" data-g="n-${k}" ${OPENG.has("n-"+k)||!CLOSEDG.has("n-"+k)?"open":""}><summary>Group notes <span class="kind note">${ns.length}</span><span class="chev">›</span></summary>
        ${ns.map(n=>`<div class="entry"><div class="by"><span>On: ${esc(n.q)}</span><span class="row"><span class="kind note">Group note</span></span></div><p>${esc(n.text)}</p>${n.who!=="You"?`<p class="who" style="margin:0">${esc(n.who)}</p>`:""}<div class="erow">${heartBtn("note",n.id)}${entryTools("notes",n)}</div></div>`).join("")}</details>`:""}
       </details>`}).join("");
+  } else if(ctab==="Archive"){
+    body=archiveView();
   } else if(ctab==="Challenges"){
     body=challenges(curGathering());
   } else if(ctab==="Members"){
@@ -1208,7 +1226,7 @@ function collective(){
       <button class="pray" data-pray="${p.id}" aria-pressed="${p.me}">${p.me?"Praying":"I'll pray"} · ${p.n}</button></div></div>`).join("")}</div>`;
   }
   return `<div class="top"><div><div class="brand">The Collective<span class="dot">.</span></div><div class="sub">Everything we've gathered, all in one place.</div></div></div>
-   <div class="pad"><div class="chips">${["Photos","Journal","Challenges","Prayer"].concat(ME.admin?["Members","Activity","Feedback","Interested"]:[]).map(x=>`<button class="chip" data-ctab="${x}" aria-pressed="${ctab===x}">${x}</button>`).join("")}</div>${body}</div>`;
+   <div class="pad"><div class="chips">${["Photos","Journal","Challenges","Prayer","Archive"].concat(ME.admin?["Members","Activity","Feedback","Interested"]:[]).map(x=>`<button class="chip" data-ctab="${x}" aria-pressed="${ctab===x}">${x}</button>`).join("")}</div>${body}</div>`;
 }
 
 /* ---------- plan + themes ---------- */
@@ -1271,7 +1289,7 @@ const OVERVIEW="Bible Brunch is a monthly gathering where we share a meal, open 
 const NOTE_STARTERS=["A verse that stuck with me was ","Something someone said that I keep thinking about: ","This month's challenge has changed how I "];
 let landingEvent=null;let page=null, landingFrom=null, landingPreview=false, landingStep="intro", landingReply=null;
 function inv(){S.invite=S.invite||{name:"",note:"",phone:"",overview:OVERVIEW};return S.invite}
-function featured(){const t0=today();const ms=months().filter(k=>S.plan[k]);return ms.find(k=>eventDate(k,byId[S.plan[k]])>=t0)||ms[ms.length-1]||curKey()}
+function featured(){const up=upcomingKeys();if(up.length)return up[0];const ms=months().filter(k=>S.plan[k]);return ms[ms.length-1]||curKey()}
 function inviteSlug(){const v=inv();const nm=(v.name||"").replace(/[^A-Za-z]/g,"").slice(0,20);const ph=(v.phone||"").replace(/\D/g,"").slice(-10);
   const k=featured();const t=byId[S.plan[k]];let ev="";if(t){const d=eventDate(k,t);ev=`-d${iso(d).replace(/-/g,"")}-t${to24(timeOf(k,t)).replace(":","")}-th_${t.id}`}
   return "i"+(nm?"-"+nm:"")+(ph.length>=10?"-"+ph:"")+ev}
@@ -1474,7 +1492,7 @@ document.addEventListener("click",e=>{const a=e.target.closest("a[id^=sh-]");if(
 document.addEventListener("click",e=>{
   const b=e.target.closest("button,[data-scrim]");if(!b)return;const ds=b.dataset;
   if(ds.scrim!==undefined){if(e.target===b)closeSheet();return}
-  if(!ME.admin&&(ds.edit||ds.ed||ds.editflow||ds.addmonth!==undefined||ds.pick||ds.removemonth||ds.setplan)){toast("Only the host can change the plan");return}
+  if(!ME.admin&&(ds.edit||ds.ed||ds.editflow||ds.addmonth!==undefined||ds.pick||ds.removemonth||ds.setplan||ds.markdone||ds.undone)){toast("Only the host can change the plan");return}
   if(ds.open&&!S.plan[ds.open]&&!ME.admin)return;
   if(ds.tab){tab=ds.tab;detailId=null;if(ds.gochal!==undefined){nextPick=curGathering();dtab="chal"}else if(ds.tab==="next"&&!b.closest(".tabs")){dtab="itin"}render();document.getElementById("main").scrollTop=0}
   else if(ds.open){if(S.plan[ds.open])openDetail(ds.open,S.plan[ds.open],ds.goto);else pickTheme(ds.open)}
@@ -1522,6 +1540,9 @@ document.addEventListener("click",e=>{
   else if(ds.iremove){const x=S.interested[ds.iremove];if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to remove";return}dbTry(sb.from("interested").delete().eq("id",x.id)).then(()=>{S.interested=S.interested.filter(y=>y!==x);render();toast("Removed")}).catch(()=>{})}
   else if(ds.dtab){const jump=!b.closest(".dtabs");dtab=ds.dtab;render();if(jump){const sc=detailId?document.getElementById("dscroll"):document.getElementById("main");const tb=(detailId?document.getElementById("detail"):document.getElementById("main")).querySelector(".dtabs");if(sc&&tb)sc.scrollTop=tb.offsetTop}}
   else if(ds.gochal!==undefined){nextPick=curGathering();dtab="chal";render()}
+  else if(ds.markdone){const k=ds.markdone;if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to mark complete";return}O2(S,"details");S.details[k]=Object.assign(det(k),{done:true});save();nextPick=null;
+    const t=byId[S.plan[k]];burst(b,k,24);toast(`${t?t.name:"Gathering"} is complete. Up next: ${byId[S.plan[featured()]]?byId[S.plan[featured()]].name:"nothing planned"}`);render()}
+  else if(ds.undone){O2(S,"details");const d=det(ds.undone);delete d.done;S.details[ds.undone]=d;save();render();toast("Back in Up next")}
   else if(ds.nextpick){nextPick=ds.nextpick;render()}
   else if(ds.heart){toggleHeart(ds.heart,ds.target)}
   else if(ds.vote){toggleVote(ds.vote)}
