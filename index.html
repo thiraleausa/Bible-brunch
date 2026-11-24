@@ -143,6 +143,9 @@ summary .grow{display:flex;flex-direction:column}
 .ctabsel select:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .ctabsel .caret{position:absolute;right:16px;font-size:18px;font-weight:900;pointer-events:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.calbtn{margin-top:2px}
+.calmini{align-self:center;font-size:12.5px}
+a.btn{text-decoration:none;color:var(--ink);text-align:center;display:block}
 .note.arch{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .list.mine li{align-items:center}.list.mine .info{flex:1;text-align:left;background:none;border:0;padding:0;display:flex;flex-direction:column}
 .list.mine .info small{font-weight:700;color:var(--muted,#555)}
@@ -580,6 +583,7 @@ async function loadAll(){if(!sb||!ME.id)return;await flushSaves().catch(()=>{});
   G.attReady=!(att&&att.error);G.att={};((att&&att.data)||[]).forEach(a=>{(G.att[a.month]=G.att[a.month]||{})[a.user_id]=a.attended});G.contacts=Object.fromEntries(((cts&&cts.data)||[]).map(c=>[c.user_id,c]));
   if(!mineDirty&&mine.data&&mine.data.data){lastMine=JSON.stringify(mine.data.data);Object.assign(S,pick(mine.data.data,MINE_KEYS))}
   S.rsvp={};G.rsvps={};(rs.data||[]).forEach(r=>{const m=r.user_id===ME.id;if(m)S.rsvp[r.month]=r.status;(G.rsvps[r.month]=G.rsvps[r.month]||[]).push({uid:r.user_id,name:r.name,status:r.status,mine:m})});
+  hideTests();
   S.claims={};G.all={};(cl.data||[]).forEach(c=>{if(c.item.startsWith(ALLP)){const what=c.item.split("|").slice(2).join("|");(G.all[c.month]=G.all[c.month]||[]).push({uid:c.user_id,name:c.name,what,item:c.item,mine:c.user_id===ME.id});return}
     (S.claims[c.month]=S.claims[c.month]||{})[c.item]=c.user_id===ME.id?"You":c.name});
   const H=hits.data||[];
@@ -758,15 +762,23 @@ function dupesOf(m){const p=(G.contacts[m.id]||{}).phone;const pd=p?digits(p).sl
 function freezeSecrets(){const c=curKey();months().filter(k=>k.slice(0,7)===c&&S.plan[k]).forEach(k=>{if(!secretsOf(k).length)return;O2(S,"details");const d=S.details[k]=det(k);const o={...(d.secretOverrides||{})};
   G.members.forEach(m=>{if(!o[m.id])o[m.id]=secretOf(k,m.id)});d.secretOverrides=o});save()}
 async function removeMember(id){const m=G.members.find(x=>x.id===id);freezeSecrets();await flushSaves().catch(()=>{});
-  const {error}=await sb.rpc("remove_member",{p_id:id});if(error){console.error(error);toast(/function|schema/i.test(error.message||"")?"Run the latest SQL update in Supabase first.":"Couldn't remove. Check your connection.");return}
+  const {error}=await sb.rpc("remove_member",{p_id:id});if(error){console.error(error);toast(/function|schema/i.test(error.message||"")?"Run update2.sql and update3.sql in Supabase first.":"Couldn't remove. Check your connection.");return}
   toast(`Removed ${m?m.name:"member"}`);refresh()}
 async function mergeMember(from,into){const a=G.members.find(x=>x.id===from),b=G.members.find(x=>x.id===into);freezeSecrets();await flushSaves().catch(()=>{});
-  const {error}=await sb.rpc("merge_members",{p_from:from,p_into:into});if(error){console.error(error);toast(/function|schema/i.test(error.message||"")?"Run the latest SQL update in Supabase first.":"Couldn't combine. Check your connection.");return}
+  const {error}=await sb.rpc("merge_members",{p_from:from,p_into:into});if(error){console.error(error);toast(/function|schema/i.test(error.message||"")?"Run update2.sql and update3.sql in Supabase first.":"Couldn't combine. Check your connection.");return}
   toast(`Combined into ${b?b.name:"one"}`);refresh()}
+const isTestName=n=>/\btest(er|ing)?\d*\b/i.test(String(n||""));
+function hideTests(){G.testMembers=(G.members||[]).filter(m=>m.id!==ME.id&&isTestName(m.name));const ids=new Set(G.testMembers.map(m=>m.id));
+  const keep=x=>!ids.has(x.user_id||x.uid||x.id)&&!isTestName(x.name);
+  G.members=(G.members||[]).filter(m=>m.id===ME.id||keep(m));G.views=G.views.filter(keep);G.shares=G.shares.filter(keep);G.votes=G.votes.filter(keep);
+  Object.keys(G.rsvps||{}).forEach(k=>{G.rsvps[k]=G.rsvps[k].filter(r=>r.mine||keep(r))})}
+async function removeTests(){const L=G.testMembers||[];let ok=0;for(const m of L){const {error}=await sb.rpc("remove_member",{p_id:m.id});if(error){console.error(error);toast(/function|schema/i.test(error.message||"")?"Run update2.sql and update3.sql in Supabase first.":"Couldn't remove. Check your connection.");break}ok++}
+  if(ok)toast(`Removed ${ok} test account${ok===1?"":"s"}`);refresh()}
 function membersLog(){if(!G.contactsReady)return `<div class="box"><p>Contact info isn't set up yet. Run the contacts SQL in Supabase, then reload.</p></div>`;
   const L=G.members.slice().sort((a,b)=>a.name.localeCompare(b.name));const withPhone=L.filter(m=>G.contacts[m.id]).length;const missing=L.filter(m=>!G.contacts[m.id]&&m.id!==ME.id).length;
   const rsvpsFor=m=>Object.entries(G.rsvps).filter(([k,rs])=>rs.some(r=>(r.uid?r.uid===m.id:r.name===m.name)&&r.status==="going")).map(([k])=>k).sort();
   return `<div class="box tint" style="flex-direction:row;align-items:center;gap:16px"><span class="big">${L.length}</span><p><b>members</b><br><span class="who">${withPhone} with a phone number${missing?` · ${missing} will be asked next time they open the app`:""}</span></p></div>
+   ${(G.testMembers||[]).length?`<div class="dupe">${G.testMembers.length} test account${G.testMembers.length===1?" is":"s are"} hidden from these lists. <button class="x" data-rmtests>Delete ${G.testMembers.length===1?"it":"them all"} for good</button></div>`:""}
    <button class="btn y block" data-copyphones>Copy all phone numbers</button>
    <div class="box">${L.length?L.map(m=>{const c=G.contacts[m.id];const going=rsvpsFor(m);return `<div class="entry"><div class="by"><span><b style="color:var(--ink);font-size:16px">${esc(m.name)}</b>${m.id===ME.id?" (you)":""}</span><span>Joined ${shortDate(m.created_at)}</span></div>
      ${c?`<p><b style="user-select:all">${esc(fmtPhone(c.phone))}</b>${c.email?`<br><span style="user-select:all">${esc(c.email)}</span>`:""}</p>
@@ -869,7 +881,7 @@ function home(){
    </div>
   <div class="pad">
    ${ks.length?`<div class="cards">${ks.map((k,i)=>{const t=byId[S.plan[k]];const r=S.rsvp[k]||"";return `<div class="tw">${tile(t,{key:k,badge:k===featured()?"Up next":"",tag:"button",attrs:`data-open="${k}" aria-label="${esc(t.name)}, ${monName(k)}"`})}
-     <div class="seg mini" role="group" aria-label="RSVP for ${esc(t.name)}">${[["going","Going"],["maybe","Maybe"],["no","Can't"]].map(([v,l])=>`<button data-rsvp="${v}" data-key="${k}" aria-pressed="${r===v}" aria-label="${v==="no"?"Can't come":l}">${l}</button>`).join("")}</div></div>`}).join("")}</div>
+     <div class="seg mini" role="group" aria-label="RSVP for ${esc(t.name)}">${[["going","Going"],["maybe","Maybe"],["no","Can't"]].map(([v,l])=>`<button data-rsvp="${v}" data-key="${k}" aria-pressed="${r===v}" aria-label="${v==="no"?"Can't come":l}">${l}</button>`).join("")}</div>${r==="going"||r==="maybe"?`<button class="x calmini" data-cal="${k}">📅 Add to calendar</button>`:""}</div>`}).join("")}</div>
    <button class="box upnext" data-tab="next"><span class="grow"><span class="label">Up next</span><b class="h2" style="font-size:20px">${esc(byId[S.plan[featured()]]?byId[S.plan[featured()]].name:"")}</b><span class="who">${S.plan[featured()]?gDate(featured()):""} · Prep, sign-ups, workbook & challenges</span></span><span style="font-weight:900;font-size:26px">›</span></button>
    ${feedbackBox()}
    ${homeStrip(curGathering())}
@@ -880,6 +892,32 @@ function home(){
 }
 
 /* ---------- itinerary ---------- */
+/* ---------- add to calendar ---------- */
+function calEvent(k){const t=byId[S.plan[k]];if(!t)return null;const d=eventDate(k,t);const st=startMin(k,t);const dur=flowOf(k,t).reduce((a,r)=>a+(Number(r[0])||0),0)||120;
+  const s=new Date(d.getFullYear(),d.getMonth(),d.getDate(),0,st),e=new Date(s.getTime()+dur*60000);const o=det(k);
+  const desc=[t.tag,o.host?"Host: "+o.host:"","Read: "+readOf(k,t),(()=>{const a=allBringOf(k,t);return a?"Everyone brings: "+a.item:""})(),"Plan, prep & sign-ups: "+ART_URL].filter(Boolean).join("\n");
+  return {uid:`bb-${k}@biblebrunch`,title:`${t.name} · Bible Brunch`,s,e,place:o.place||"",desc}}
+const icsT=d=>d.toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"");
+const icsEsc=x=>String(x).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n");
+function icsFor(keys){const ev=keys.map(calEvent).filter(Boolean);const now=icsT(new Date());
+  return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Bible Brunch//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH"].concat(...ev.map(e=>["BEGIN:VEVENT","UID:"+e.uid,"DTSTAMP:"+now,"DTSTART:"+icsT(e.s),"DTEND:"+icsT(e.e),
+    "SUMMARY:"+icsEsc(e.title),e.place?"LOCATION:"+icsEsc(e.place):"","DESCRIPTION:"+icsEsc(e.desc),"URL:"+ART_URL,
+    "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsEsc(e.title)+" is tomorrow","TRIGGER:-P1D","END:VALARM",
+    "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsEsc(e.title)+" starts in 1 hour","TRIGGER:-PT1H","END:VALARM","END:VEVENT"].filter(Boolean)),["END:VCALENDAR"]).join("\r\n")}
+function downloadIcs(keys,name){const blob=new Blob([icsFor(keys)],{type:"text/calendar;charset=utf-8"});const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download=name+".ics";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
+function gcalUrl(k){const e=calEvent(k);return "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(e.title)+"&dates="+icsT(e.s)+"/"+icsT(e.e)+"&details="+encodeURIComponent(e.desc)+"&location="+encodeURIComponent(e.place)}
+function outlookUrl(k){const e=calEvent(k);return "https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject="+encodeURIComponent(e.title)+"&startdt="+e.s.toISOString()+"&enddt="+e.e.toISOString()+"&body="+encodeURIComponent(e.desc)+"&location="+encodeURIComponent(e.place)}
+function calButton(k,label){if(!k||!S.plan[k]||isArchived(k))return "";return `<button class="btn w block calbtn" data-cal="${k}">📅 ${label||"Add to my calendar"}</button>`}
+function calSheet(k){const t=byId[S.plan[k]];const e=calEvent(k);
+  sheet(`<div class="h2">Add to your calendar</div><p class="sub">${esc(t.name)} · ${gDate(k)} · ${clock(startMin(k,t))}${e.place?" · "+esc(e.place):""}</p>
+   <div class="col" style="gap:10px">
+    <button class="btn block" data-calics="${k}"> Apple / iPhone Calendar</button>
+    <a class="btn w block" href="${gcalUrl(k)}" target="_blank" rel="noopener" data-callog="google">Google Calendar</a>
+    <a class="btn w block" href="${outlookUrl(k)}" target="_blank" rel="noopener" data-callog="outlook">Outlook</a>
+   </div>
+   <p class="who" style="margin-top:10px">Includes reminders the day before and 1 hour before. If the date or time changes later, add it again to update it.</p>`)}
+
 function itinerary(t,k){
   const d=k&&eventDate(k,t);let m=startMin(k,t);
   const steps=flowOf(k,t).map(([min,label,always])=>{const at=m;m+=min;return {at,label,always,min}});
@@ -890,6 +928,7 @@ function itinerary(t,k){
      ${k?`<dt>Where</dt><dd>${det(k).place?`${esc(det(k).place)}<br><a class="maplink" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(det(k).place)}" target="_blank" rel="noopener">Open in Maps</a>`:"Location to be announced"}</dd>
      <dt>Host</dt><dd>${det(k).host?esc(det(k).host):"To be announced"}</dd>`:""}
      <dt>Read</dt><dd>${esc(readOf(k,t))}</dd><dt>Setup</dt><dd style="white-space:pre-line">${esc(setupOf(k,t))}</dd></dl>${k?`<button class="btn w" data-edit="${k}">Edit details &amp; setup</button>`:""}${k&&ME.admin&&S.plan[k]===t.id?`<button class="btn y" data-wbedit="${k}">Edit the day-of workbook</button>`:""}${k?`<button class="btn" data-feedback="${k}">Does this date or time work for you?</button>`:""}</div>
+   ${k&&S.plan[k]===t.id?calButton(k):""}
    <div class="box"><div class="h2">The itinerary</div>
     <ol class="timeline">${steps.length?"":`<li><span class="what" style="grid-column:1/-1">No steps yet.</span></li>`}${steps.map((s,i)=>`<li style="--c:${colors[i%colors.length]}"><span class="clock">${clock(s.at)}</span><span class="pin"></span><span class="what">${esc(s.label)}${s.always?`<span class="always">Every month</span>`:""}<small>${s.min} min</small></span></li>`).join("")}</ol>
    ${k?`<button class="btn w" data-editflow="${k}">Edit itinerary</button>`:""}</div>
@@ -904,7 +943,7 @@ function prep(t,k){
    ${ME.admin?attendanceBox(k):""}
    <div class="box"><div class="h2">Are you coming?</div>
     <div class="seg" role="group" aria-label="RSVP">${[["going","Going"],["maybe","Maybe"],["no","Can't come"]].map(([v,l])=>`<button data-rsvp="${v}" data-key="${k}" aria-pressed="${r===v}">${l}</button>`).join("")}</div>
-    ${faces(k)}</div>
+    ${faces(k)}${S.rsvp[k]&&S.rsvp[k]!=="no"?calButton(k):""}</div>
    ${secretCard(k)}
    <div class="box"><div class="bhead"><div class="h2">Before you come</div><button class="editpill" data-ed="prep" data-k="${k}">Edit</button></div>
     ${tasks.map((x,i)=>`<label class="check"><input type="checkbox" id="prep-${k}-${i}" data-prep="${k}" data-i="${i}" ${pc[i]?"checked":""}><span>${esc(x)}</span></label>`).join("")}</div>
@@ -1148,7 +1187,7 @@ function myBrunch(){
   const jlist=(L,id,label)=>`<details class="jsub" data-g="${id}" ${CLOSEDG.has(id)?"":"open"}><summary>${label} <span class="kind">${L.length}</span><span class="chev">›</span></summary>${L.length?L.map(j=>`<div class="entry"><div class="by"><span>${S.plan[j.key]?esc(byId[S.plan[j.key]].name):""}</span><span class="row"><span class="kind ${j.shared?"":"private"}">${j.shared?"Shared":"Only you"}</span></span></div><p>${esc(j.text)}</p><div class="erow">${j.shared?heartBtn("journal",j.id):"<span></span>"}${entryTools("journal",j)}</div></div>`).join(""):`<p class="who">Nothing here yet.</p>`}</details>`;
   return `<div class="top"><div><div class="brand">My Brunch<span class="dot">.</span></div><div class="sub">Hi, ${esc((ME.name||"friend").split(" ")[0])}! Everything that's yours, in one place.</div></div><button class="iconbtn" data-account aria-label="Account" style="width:auto;padding:0 12px;font-weight:900;font-size:13px">Account</button></div>
   <div class="pad">
-   <div class="box"><div class="h2">My RSVPs</div>${upR.length?`<ul class="list mine">${upR.map(row).join("")}</ul>`:`<p class="who">You haven't RSVPed to anything coming up. Tap Going, Maybe, or Can't under a card on Home.</p>`}
+   <div class="box"><div class="h2">My RSVPs</div>${upR.length?`<ul class="list mine">${upR.map(row).join("")}</ul>${upR.filter(k=>S.rsvp[k]!=="no").length?`<button class="btn w block" data-calall>📅 Add ${upR.filter(k=>S.rsvp[k]!=="no").length>1?"all of these":"it"} to my calendar</button>`:""}`:`<p class="who">You haven't RSVPed to anything coming up. Tap Going, Maybe, or Can't under a card on Home.</p>`}
     ${pastR.length?`<details class="jsub" data-g="me-past"><summary>Past gatherings <span class="kind">${pastR.length}</span><span class="chev">›</span></summary><ul class="list mine">${pastR.map(row).join("")}</ul></details>`:""}</div>
    <div class="box"><div class="h2">What I'm bringing</div>${bring.length?`<ul class="list mine">${bring.join("")}</ul>`:`<p class="who">You haven't signed up to bring anything yet. Find the food sign-up on the Prep tab of Up next.</p>`}</div>
    ${ct?`<button class="box strip" data-tab="next" data-gochal><span class="big">${pts}<small>/${GOAL}</small></span><span class="grow"><b class="h2" style="font-size:20px">My challenges</b>
@@ -1178,6 +1217,8 @@ let lastView="";const OPENG=new Set(),CLOSEDG=new Set();
 document.addEventListener("toggle",e=>{const d=e.target;if(!d.dataset||!d.dataset.g)return;const id=d.dataset.g;if(d.open){OPENG.add(id);CLOSEDG.delete(id)}else{CLOSEDG.add(id);OPENG.delete(id)}},true);
 function gDate(k){const t=byId[S.plan[k]];const d=eventDate(k,t);return `${d.toLocaleDateString("en-US",{weekday:"short"})}, ${fmtMon(d)} ${d.getDate()}`}
 function track(pg){if(!sb||!ME.id||ME.admin||!G.v3||!pg||pg===lastView)return;lastView=pg;sb.from("page_views").insert({user_id:ME.id,name:ME.name||"Someone",page:pg.slice(0,80)}).then(()=>{},()=>{})}
+function logCal(how){track("Added to calendar · "+how);lastView=""}
+document.addEventListener("click",e=>{const a=e.target.closest("a[data-callog]");if(a)logCal(a.dataset.callog==="google"?"Google":"Outlook")});
 function logShare(method){if(!sb||!ME.id)return;const row={user_id:ME.id,name:ME.name||"Someone",method};if(ME.admin)G.shares.unshift({...row,created_at:new Date().toISOString()});
   sb.from("share_log").insert(row).then(()=>{},()=>{})}
 function pageName(){if(page)return page==="invite"?"Invite a friend":page==="landing"?"Invite page":"";
@@ -1526,6 +1567,7 @@ document.addEventListener("click",e=>{
   else if(ds.eedit){entryEditSheet(ds.tbl,ds.eedit)}
   else if(ds.edel){if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to delete";return}const tbl=ds.tbl,id=ds.edel;
     dbTry(sb.from(tbl).delete().eq("id",id)).then(()=>{if(tbl==="journal")S.journal=S.journal.filter(x=>x.id!==id);else S.gnotes=S.gnotes.filter(x=>x.id!==id);render();toast("Deleted")}).catch(()=>{})}
+  else if(ds.rmtests!==undefined){if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to delete";return}removeTests()}
   else if(ds.mrm){if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to remove";return}removeMember(ds.mrm)}
   else if(ds.mmerge){if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to combine";return}mergeMember(ds.mmerge,ds.into)}
   else if(ds.fbdel){if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to remove";return}dbTry(sb.from("feedback").delete().eq("id",ds.fbdel)).then(()=>{G.feedback=G.feedback.filter(x=>x.id!==ds.fbdel);render();toast("Removed")}).catch(()=>{})}
@@ -1554,6 +1596,9 @@ document.addEventListener("click",e=>{
   else if(ds.markdone){const k=ds.markdone;if(!b.dataset.armed){b.dataset.armed="1";b.textContent="Tap again to mark complete";return}O2(S,"details");S.details[k]=Object.assign(det(k),{done:true});save();nextPick=null;
     const t=byId[S.plan[k]];burst(b,k,24);toast(`${t?t.name:"Gathering"} is complete. Up next: ${byId[S.plan[featured()]]?byId[S.plan[featured()]].name:"nothing planned"}`);render()}
   else if(ds.undone){O2(S,"details");const d=det(ds.undone);delete d.done;S.details[ds.undone]=d;save();render();toast("Back in Up next")}
+  else if(ds.cal){calSheet(ds.cal)}
+  else if(ds.calics){downloadIcs([ds.calics],"bible-brunch-"+ds.calics.replace("~","-"));logCal("Apple");closeSheet()}
+  else if(ds.calall!==undefined){const ks=upcomingKeys().filter(k=>S.rsvp[k]&&S.rsvp[k]!=="no");if(!ks.length)return;downloadIcs(ks,"bible-brunch-gatherings");logCal("Apple (all)");toast(ks.length>1?`Adding ${ks.length} gatherings…`:"Adding to your calendar…")}
   else if(ds.nextpick){nextPick=ds.nextpick;render()}
   else if(ds.heart){toggleHeart(ds.heart,ds.target)}
   else if(ds.vote){toggleVote(ds.vote)}
