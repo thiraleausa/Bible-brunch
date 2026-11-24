@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Bible Brunch</title>
 <meta name="description" content="Monthly Bible Brunch gatherings: the plan, food sign-ups, the day-of workbook, and challenges.">
-<meta name="theme-color" content="#FFE14D">
+<meta name="theme-color" content="#FFE14D" id="meta-theme">
+<script>(function(){var m=localStorage.getItem("bb-theme")||"auto";var d=m==="dark"||(m==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark");document.getElementById("meta-theme").content=d?"#14111C":"#FFE14D"})()</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -20,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@500;700;800;900&display=swap">
 <style>
-/* Layout: phone-sized app on a confetti table; sticker-style cards with ink outlines and hard shadows. One bright look, no dark variant by choice. */
+/* Layout: phone-sized app on a confetti table; sticker-style cards with ink outlines and hard shadows. Light by default, with a dark variant (html.dark). */
 :root{
   color-scheme:light;
   --paper:#FFFFFF; --ink:#161616; --soft:#5B5B66; --line:#161616;
@@ -28,7 +29,7 @@
   --wash:#FFF6FB;
   --display:"Chewy","Cooper Black","Comic Sans MS",cursive;
   --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --pop:3px 3px 0 var(--ink);
+  --shadow:var(--ink);--pop:3px 3px 0 var(--shadow);
 }
 html,body{height:100%}
 body{background:#FFF1A8;color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
@@ -40,7 +41,7 @@ button{cursor:pointer}
 :focus-visible{outline:3px solid var(--purple);outline-offset:2px}
 
 .phone{position:relative;width:100%;max-width:400px;height:min(860px,calc(100% - 32px));background:var(--paper);
-  border-radius:40px;overflow:hidden;border:4px solid var(--ink);box-shadow:8px 8px 0 var(--ink);display:flex;flex-direction:column}
+  border-radius:40px;overflow:hidden;border:4px solid var(--ink);box-shadow:8px 8px 0 var(--shadow);display:flex;flex-direction:column}
 @media (max-width:520px){body{padding-inline:0;background-image:none;background:var(--paper)} .phone{max-width:none;height:100%;border-radius:0;border:0;box-shadow:none}}
 .scroll{flex:1;overflow-y:auto;overflow-x:hidden}
 .pad{padding:8px 18px 28px;display:flex;flex-direction:column;gap:16px}
@@ -49,16 +50,17 @@ button{cursor:pointer}
 .brand{font-family:var(--display);font-size:32px;line-height:1;letter-spacing:.5px}
 .brand .dot{color:var(--pink)}
 .sub{font-weight:800;font-size:13px;color:var(--soft)}
-.iconbtn{width:42px;height:42px;border-radius:50%;border:2.5px solid var(--ink);background:var(--paper);display:grid;place-items:center;box-shadow:2px 2px 0 var(--ink);flex:none}
+.iconbtn{width:42px;height:42px;border-radius:50%;border:2.5px solid var(--ink);background:var(--paper);display:grid;place-items:center;box-shadow:2px 2px 0 var(--shadow);flex:none}
 .iconbtn svg{width:20px;height:20px}
 h1,h2,h3{margin:0;text-wrap:balance}
 .h2{font-family:var(--display);font-size:24px;line-height:1.1}
 .label{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
 
 /* ---- the square theme card ---- */
+.tile,.invcard{--cbg:var(--tb,#fff)}
 .tile{position:relative;aspect-ratio:1/1;width:100%;max-width:100%;border-radius:22px;background:var(--cbg);border:3px solid var(--ink);box-shadow:var(--pop);overflow:hidden;container-type:inline-size;display:block;padding:0;text-align:center}
 button.tile{transition:transform .12s ease}
-button.tile:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+button.tile:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
 .stk{position:absolute;z-index:1;pointer-events:none;filter:drop-shadow(1.5px 1.5px 0 rgba(0,0,0,.18))}
 .stk svg{width:100%;height:auto;display:block;overflow:visible}
 .ttl{position:absolute;z-index:2;left:8%;right:8%;top:50%;transform:translateY(-54%) rotate(-3deg);font-family:var(--display);text-transform:uppercase;line-height:.92;display:flex;flex-direction:column;align-items:center}
@@ -82,7 +84,7 @@ button.tile:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .box{background:var(--paper);border:2.5px solid var(--ink);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--pop)}
 .box p{margin:0}
 .box.tint{background:var(--wash)}
-.btn{border:2.5px solid var(--ink);border-radius:14px;padding:11px 16px;font-weight:900;background:var(--pink);color:var(--ink);box-shadow:2px 2px 0 var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn{border:2.5px solid var(--ink);border-radius:14px;padding:11px 16px;font-weight:900;background:var(--pink);color:var(--ink);box-shadow:2px 2px 0 var(--shadow);display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .btn.y{background:var(--yellow)} .btn.w{background:var(--paper)} .btn.g{background:var(--green)}
 .btn.block{width:100%}
 .btn:active{transform:translate(2px,2px);box-shadow:none}
@@ -137,7 +139,7 @@ summary .grow{display:flex;flex-direction:column}
 .upnext{flex-direction:row!important;align-items:center;gap:12px;text-align:left;background:#C9F2FF;cursor:pointer;width:100%}
 .upnext .grow{display:flex;flex-direction:column;gap:2px}
 .intab .dtop{padding-top:4px}
-.ctabsel{position:relative;display:flex;align-items:center;border:2.5px solid var(--ink);border-radius:16px;background:var(--yellow);box-shadow:3px 3px 0 var(--ink);margin-bottom:2px}
+.ctabsel{position:relative;display:flex;align-items:center;border:2.5px solid var(--ink);border-radius:16px;background:var(--yellow);box-shadow:3px 3px 0 var(--shadow);margin-bottom:2px}
 .ctabsel .ico{position:absolute;left:14px;font-size:20px;pointer-events:none}
 .ctabsel select{appearance:none;-webkit-appearance:none;width:100%;border:0;background:transparent;font:inherit;font-weight:900;font-size:18px;color:var(--ink);padding:13px 44px 13px 16px;border-radius:16px}
 .ctabsel select:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
@@ -203,7 +205,7 @@ textarea{min-height:90px;resize:vertical}
 /* collective */
 .chips{display:flex;gap:8px;overflow-x:auto;margin-inline:-18px;padding:2px 18px 6px}
 .chip{flex:none;border:2.5px solid var(--ink);background:var(--paper);border-radius:999px;padding:6px 14px;font-weight:900;font-size:14px}
-.chip[aria-pressed="true"]{background:var(--aqua);box-shadow:2px 2px 0 var(--ink)}
+.chip[aria-pressed="true"]{background:var(--aqua);box-shadow:2px 2px 0 var(--shadow)}
 .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .pcell{display:flex;flex-direction:column;gap:6px;font-weight:800;font-size:13px;min-width:0}
 .pcell img{width:100%;aspect-ratio:1/1;object-fit:cover;border:2.5px solid var(--ink);border-radius:16px}
@@ -366,6 +368,50 @@ a.pill{color:var(--ink);text-decoration:none;display:inline-block}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 body{margin:0}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
+
+/* ---------- dark mode ---------- */
+html.dark{color-scheme:dark}
+html.dark{--paper:#1E1A28;--ink:#F4EFFF;--soft:#B9B3CC;--line:#F4EFFF;--wash:#2A2438;--shadow:#000;
+  --pink:#FF5FAE;--yellow:#FFE14D;--aqua:#7DF3F0;--green:#4AD97A;--purple:#A88BFF;--orange:#FFA94D;--dash:#3B3550}
+html.dark body{background:#14111C;background-image:radial-gradient(circle at 12px 12px,#FF4FA3 2.5px,transparent 3px),radial-gradient(circle at 36px 30px,#2F8F8C 3px,transparent 3.5px),radial-gradient(circle at 26px 48px,#6B4FD8 2px,transparent 2.5px);background-size:56px 56px}
+@media (max-width:520px){html.dark body{background:var(--paper);background-image:none}}
+html.dark .phone{box-shadow:8px 8px 0 #000}
+/* bright-filled pieces keep dark text and outlines, like little light islands */
+html.dark :is(.btn:not(.w),.seg button[aria-pressed="true"],.chip[aria-pressed="true"],.kind,.tabs button[aria-current="page"],.ctabsel,.strip,.fbbox,.upnext,.pill.on,.pill.y,.pill.att.on,.pill.att.off,
+  .rsvptag:not(.r-none),.pts,.earned,.face,.opt[aria-pressed="true"],.segopt input:checked+span,.fbchip input:checked+span,.secret.open,.heart[aria-pressed="true"],.vote[aria-pressed="true"],.pray[aria-pressed="true"],
+  .dupe,.allb,.meter,.mrow.now,.list li.hab.won,.check input:checked,.step.done .num,.always,.dots span.on,[style*="background:#EAFBEF"]){--ink:#161616;--soft:#4A4458;--paper:#FFFFFF;--wash:#FFF6FB;--shadow:#000;color:#161616}
+html.dark .face.you{color:#fff}
+html.dark .tabs button[aria-current="page"]{border-color:#161616}
+html.dark .heart{color:#FF7DB8}
+html.dark .kind.private{background:#D9D0FF}
+html.dark .allb{background:#FFE9A0}
+html.dark .meter,html.dark .mrow.now{background:#FFF0B3}
+html.dark .list li.hab.won{background:#C8F5D6}
+html.dark [style*="background:#EAFBEF"]{background:#C8F5D6!important}
+html.dark :is(.q,.entry){border-color:var(--dash)}
+html.dark .list li,html.dark .arow,html.dark details.jg[open]>summary{border-top-color:var(--dash);border-bottom-color:var(--dash)}
+html.dark details.jsub{background:#26212F}
+html.dark .toast,html.dark .invnext,html.dark .previewbar{background:#F4EFFF;color:#161616}
+html.dark .previewbar .pill{color:#161616}
+html.dark .tdate{color:#161616}
+html.dark .scrim{background:rgba(0,0,0,.6)}
+html.dark .sync::before{background:#5B5570}
+html.dark .pbar span.half{background:repeating-linear-gradient(45deg,#7A3D60 0 5px,var(--paper) 5px 10px)}
+html.dark .secret:not(.open){background:repeating-linear-gradient(-45deg,#3A2F5C 0 12px,#463970 12px 24px)}
+html.dark .list.mine .info small{color:var(--soft)}
+html.dark .maplink{color:#C7B5FF}
+html.dark .sub[style*="color:#fff"]{color:#fff}
+/* dark artwork: theme cards and the invite card */
+html.dark .tile,html.dark .invcard{--cbg:color-mix(in srgb,var(--tb,#888) 26%,#17131F);border-color:color-mix(in srgb,var(--tb,#888) 70%,#fff)}
+html.dark .tile{box-shadow:3px 3px 0 #000}
+html.dark .ttl{color:color-mix(in srgb,var(--tb,#fff) 45%,#fff)}
+html.dark .ttl svg path{stroke:color-mix(in srgb,var(--tb,#fff) 45%,#fff)}
+html.dark .stk{filter:drop-shadow(1.2px 0 0 #F4EFFF) drop-shadow(-1.2px 0 0 #F4EFFF) drop-shadow(0 1.2px 0 #F4EFFF) drop-shadow(0 -1.2px 0 #F4EFFF) drop-shadow(2px 2px 0 rgba(0,0,0,.55))}
+html.dark .stk [fill="#161616"]{fill:#2A2338}
+html.dark .invtitle{color:color-mix(in srgb,var(--tb,#fff) 45%,#fff)}
+html.dark .invin .swoosh path{stroke:color-mix(in srgb,var(--tb,#fff) 45%,#fff)}
+html.dark .pcell img{filter:brightness(.92)}
+.themepick{display:flex;flex-direction:column;gap:6px}
 </style>
 </head>
 <body>
@@ -518,7 +564,7 @@ function lines(name){const raw=name.split(" ");const tk=[];for(let i=0;i<raw.len
 function tile(t,{key,badge,tag="div",attrs=""}={}){
   const ls=lines(t.name);const longest=Math.max(...ls.map(l=>l.length));let fs=Math.min(16,128/longest);if(ls.length>=3)fs=Math.min(fs,12.5);
   const d=key?eventDate(key,t):null;
-  return `<${tag} class="tile" style="--cbg:${t.bg}" ${attrs}>
+  return `<${tag} class="tile" style="--tb:${t.bg}" ${attrs}>
    ${t.st.slice(0,4).map((s,i)=>{const p=SLOTS[i];return `<span class="stk" style="left:${p.l}%;top:${p.t}%;width:${p.s}%;transform:rotate(${p.r}deg)">${SV[s]}</span>`}).join("")}
    <span class="ttl" style="font-size:${fs}cqw">${BURST}${ls.map(l=>`<span>${esc(l).replace(/^(&amp;|\+) /,(m,a)=>`<i>${a}</i> `)}</span>`).join("")}${SWOOSH}</span>
    ${badge?`<span class="tbadge">${badge}</span>`:""}
@@ -667,7 +713,11 @@ function welcomeView(){
     ${tile(t,{key:featured(),badge:"Next gathering"})}${form}</div></div>`}
 function setupView(){return `<div class="scroll" id="dscroll"><div class="pad" style="padding-top:28px"><div class="brand">Almost there<span class="dot">.</span></div>
   <div class="box"><p>This copy of Bible Brunch isn't connected to its database yet. Open <b>config.js</b> and paste in your Supabase project URL and anon key, then upload the site again.</p></div></div></div>`}
-function accountSheet(){sheet(`<div class="h2">Your account</div>
+let THEME=localStorage.getItem("bb-theme")||"auto";
+function applyTheme(){const d=THEME==="dark"||(THEME==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);const m=document.getElementById("meta-theme");if(m)m.content=d?"#14111C":"#FFE14D"}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(THEME==="auto")applyTheme()});
+function themePicker(){return `<div class="themepick"><span class="label">Appearance</span><div class="seg mini">${[["auto","Auto"],["light","☀️ Light"],["dark","🌙 Dark"]].map(([v,l])=>`<button data-theme-set="${v}" aria-pressed="${THEME===v}">${l}</button>`).join("")}</div>${THEME==="auto"?`<span class="who">Auto follows your phone's light or dark setting.</span>`:""}</div>`}
+function accountSheet(){sheet(`<div class="h2">Your account</div>${themePicker()}
   <form data-renameform style="display:flex;flex-direction:column;gap:10px"><label class="field"><span class="label">Your full name</span><input type="text" id="acct-name" value="${esc(ME.name)}" maxlength="60" autocomplete="name"></label><button class="btn y" type="submit">Save name</button></form>
   ${!ME.admin&&G.contactsReady?`<form data-acctcontact style="display:flex;flex-direction:column;gap:10px"><label class="field"><span class="label">Phone number</span><input type="text" inputmode="tel" id="acct-phone" value="${esc((G.contacts[ME.id]||{}).phone||"")}" autocomplete="tel"></label>
    <label class="field"><span class="label">Email (optional)</span><input type="text" inputmode="email" id="acct-email" value="${esc((G.contacts[ME.id]||{}).email||"")}" autocomplete="email"></label>
@@ -1187,6 +1237,7 @@ function myBrunch(){
   const jlist=(L,id,label)=>`<details class="jsub" data-g="${id}" ${CLOSEDG.has(id)?"":"open"}><summary>${label} <span class="kind">${L.length}</span><span class="chev">›</span></summary>${L.length?L.map(j=>`<div class="entry"><div class="by"><span>${S.plan[j.key]?esc(byId[S.plan[j.key]].name):""}</span><span class="row"><span class="kind ${j.shared?"":"private"}">${j.shared?"Shared":"Only you"}</span></span></div><p>${esc(j.text)}</p><div class="erow">${j.shared?heartBtn("journal",j.id):"<span></span>"}${entryTools("journal",j)}</div></div>`).join(""):`<p class="who">Nothing here yet.</p>`}</details>`;
   return `<div class="top"><div><div class="brand">My Brunch<span class="dot">.</span></div><div class="sub">Hi, ${esc((ME.name||"friend").split(" ")[0])}! Everything that's yours, in one place.</div></div><button class="iconbtn" data-account aria-label="Account" style="width:auto;padding:0 12px;font-weight:900;font-size:13px">Account</button></div>
   <div class="pad">
+   <div class="box">${themePicker()}</div>
    <div class="box"><div class="h2">My RSVPs</div>${upR.length?`<ul class="list mine">${upR.map(row).join("")}</ul>${upR.filter(k=>S.rsvp[k]!=="no").length?`<button class="btn w block" data-calall>📅 Add ${upR.filter(k=>S.rsvp[k]!=="no").length>1?"all of these":"it"} to my calendar</button>`:""}`:`<p class="who">You haven't RSVPed to anything coming up. Tap Going, Maybe, or Can't under a card on Home.</p>`}
     ${pastR.length?`<details class="jsub" data-g="me-past"><summary>Past gatherings <span class="kind">${pastR.length}</span><span class="chev">›</span></summary><ul class="list mine">${pastR.map(row).join("")}</ul></details>`:""}</div>
    <div class="box"><div class="h2">What I'm bringing</div>${bring.length?`<ul class="list mine">${bring.join("")}</ul>`:`<p class="who">You haven't signed up to bring anything yet. Find the food sign-up on the Prep tab of Up next.</p>`}</div>
@@ -1286,7 +1337,7 @@ function plan(){
   const c=curKey();
   return `<div class="top"><div><div class="brand">Year plan<span class="dot">.</span></div><div class="sub">Tap Edit to change a date, time, or location</div></div></div>
   <div class="pad"><div class="months">${months().map(k=>{const t=byId[S.plan[k]];const d=eventDate(k,t);
-    return `<div class="mrow ${k===c?"now":""}">${t?tile(t,{tag:"button",attrs:`data-open="${k}" aria-label="Open ${esc(t.name)}"`}):`<div class="tile" style="--cbg:#F2F2F2"></div>`}
+    return `<div class="mrow ${k===c?"now":""}">${t?tile(t,{tag:"button",attrs:`data-open="${k}" aria-label="Open ${esc(t.name)}"`}):`<div class="tile" style="--tb:#F2F2F2"></div>`}
      <button class="info" data-open="${k}"><b>${t?esc(t.name):"Open month"}</b><small>${d.toLocaleDateString("en-US",{weekday:"short"})}, ${fmtMon(d)} ${d.getDate()} · ${t?(timeOf(k,t)):""}${k.slice(0,7)===c?" · This month":k.slice(0,7)<c?" · Done":""}</small><small class="place">${det(k).place?esc(det(k).place):"Location to be announced"}</small></button>
      <button class="pill" data-edit="${k}">Edit</button></div>`}).join("")}</div>
    <button class="btn y block" data-addmonth>Add another month</button></div>`;
@@ -1352,7 +1403,7 @@ function inviteMsg(){const v=inv();const k=featured();
 const fmtPhone=p=>{const d=String(p||"").replace(/\D/g,"").slice(-10);return d.length===10?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:p||""};
 
 function inviteCard(){const v=inv();const k=featured();const t=byId[S.plan[k]];const d=eventDate(k,t);
-  return `<div class="invcard" style="--cbg:${t.bg}">
+  return `<div class="invcard" style="--tb:${t.bg}">
     ${t.st.slice(0,4).map((s,i)=>{const p=[{l:-6,t:-5,s:24,r:-12},{l:80,t:-3,s:20,r:12},{l:-4,t:84,s:20,r:8},{l:80,t:82,s:24,r:-8}][i];return `<span class="stk" style="left:${p.l}%;top:${p.t}%;width:${p.s}%;transform:rotate(${p.r}deg)">${SV[s]}</span>`}).join("")}
     <div class="invin">
      <span class="label" style="color:var(--ink)">You're invited to</span>
@@ -1599,6 +1650,7 @@ document.addEventListener("click",e=>{
   else if(ds.cal){calSheet(ds.cal)}
   else if(ds.calics){downloadIcs([ds.calics],"bible-brunch-"+ds.calics.replace("~","-"));logCal("Apple");closeSheet()}
   else if(ds.calall!==undefined){const ks=upcomingKeys().filter(k=>S.rsvp[k]&&S.rsvp[k]!=="no");if(!ks.length)return;downloadIcs(ks,"bible-brunch-gatherings");logCal("Apple (all)");toast(ks.length>1?`Adding ${ks.length} gatherings…`:"Adding to your calendar…")}
+  else if(ds.themeSet){THEME=ds.themeSet;localStorage.setItem("bb-theme",THEME);applyTheme();render();const sh=document.querySelector(".sheet [data-theme-set]");if(sh)accountSheet();toast(THEME==="dark"?"Dark mode on 🌙":THEME==="light"?"Light mode on ☀️":"Following your phone")}
   else if(ds.nextpick){nextPick=ds.nextpick;render()}
   else if(ds.heart){toggleHeart(ds.heart,ds.target)}
   else if(ds.vote){toggleVote(ds.vote)}
